@@ -1,1 +1,1 @@
-killall Python; cd src/; python ./main.py
+killall Python; killall python; cd src/; python ./main.py

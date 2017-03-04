@@ -78,7 +78,7 @@ def clearScreen():
     print(chr(27) + "[2J")
 
 def log(level, msg):
-    if (LoggerConstants.iDisplayedLogLevel <= level):
+    if (str(LoggerConstants.iDisplayedLogLevel) <= str(level)):
         (callerFile, callerLine, callerFunction) = getFileAndFunctionNames()
         if (level == PRETTY):
             prettyMsg = "{}".format(msg)
