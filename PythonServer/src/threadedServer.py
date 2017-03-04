@@ -87,6 +87,25 @@ class ThreadedServer:
                 break
         log(DEBUG, '<<')
 
+    def replyMessage(self, connection, message):
+        """
+            Function to reply to a TCP client given an existing connection and
+            a Dictionary-formatted message. This function converts the message
+            to a JSON serialized object and sends it back using the connection.
+
+            Params:
+                connection - Connection reference from receiveMessage function
+
+                message - Dictionary-formatted object storing the message
+        """
+        try:
+            serializedData = json.dumps(message)
+            connection.send(serializedData)
+        except Exception as e:
+            log(ERROR, "Unable to send message, reason: {}".format(e))
+            log(ERROR, "Msg: {}".format(message))
+
+
     def receiveMessage(self, connection):
         """
             Function to receive message and invoke callback function
@@ -101,7 +120,8 @@ class ThreadedServer:
                 if serializedData:
                     message = json.loads(serializedData) # decode msg                     
                     log(DEBUG, '>>2 {}'.format(message))
-                    self.callbackFunction(message)
+                    self.callbackFunction(connection, message)
+                    
                 else:
                     raise Exception('Client disconnected')
             except Exception as e:

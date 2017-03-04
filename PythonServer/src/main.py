@@ -16,8 +16,11 @@ def initializeThreadedServer(callback, threadManager):
         log(ERROR,"threadedServer isn't ready to launch!")
     return threadedServer
 
-def receivedMessage(message):
+def receivedMessage(connection, message):
     log(INFO, "receivedMessage = {}".format(message))
+
+    # This function echoes the message back to the client.
+    self.threadedServer.replyMessage(connection, message)
 
 if __name__ == '__main__':
     sDeviceName = socket.gethostname()
