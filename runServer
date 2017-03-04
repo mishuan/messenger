@@ -1,1 +1,0 @@
-killall Python; cd PythonServer/src/; python ./main.py
