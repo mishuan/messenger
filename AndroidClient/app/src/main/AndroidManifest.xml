@@ -18,6 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".ServerService" android:process=":server_service" android:stopWithTask="true"/>
     </application>
 
 </manifest>
