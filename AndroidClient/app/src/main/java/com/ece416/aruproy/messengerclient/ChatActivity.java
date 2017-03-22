@@ -15,10 +15,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
-public class GroupPage extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity {
 
     private BroadcastReceiver mBroadcastReceiver;
     private IntentFilter mIntentFilter;
@@ -39,7 +36,6 @@ public class GroupPage extends AppCompatActivity {
                 }
             });
             mTcpClient.run();
-
             return null;
         }
 
@@ -73,17 +69,25 @@ public class GroupPage extends AppCompatActivity {
         mIntentFilter.addAction(Constants.SERVICE_INTENT_ID);
         registerReceiver(mBroadcastReceiver, mIntentFilter);
 
-        // Server service registration
-        Intent serverIntent = new Intent(this, ServerService.class);
-        startService(serverIntent);
+//        // Server service registration
+//        Intent serverIntent = new Intent(this, ServerService.class);
+//        startService(serverIntent);
 
         new ConnectTask().execute("");
+
+        try {
+            Thread.sleep(5000);
+            mTcpClient.sendMessage("hello");
+        } catch (InterruptedException e) {
+            Thread.interrupted();
+        }
     }
 
     private class LocalBroadcastReceiver extends BroadcastReceiver{
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.e(Constants.ACTIVITY_DEBUG_TAG, intent.getStringExtra("isReachable"));
+            // TODO: do something when something is sent from service
+            // Log.e(Constants.ACTIVITY_DEBUG_TAG, intent.getStringExtra("isReachable"));
         }
     }
 
@@ -121,16 +125,24 @@ public class GroupPage extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        switch (item.getItemId()) {
+            case R.id.action_join_group:
+                // User chose the "Favorite" action, mark the current item
+                // as a favorite...
+                Log.e(Constants.ACTIVITY_DEBUG_TAG, "PRESSED JOIN GROUP");
+                return true;
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+            case R.id.action_login:
+                // User chose the "Favorite" action, mark the current item
+                // as a favorite...
+                Log.e(Constants.ACTIVITY_DEBUG_TAG, "PRESSED LOGIN");
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
         }
-
-        return super.onOptionsItemSelected(item);
     }
 }

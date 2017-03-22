@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">Messenger Client</string>
     <string name="action_settings">Settings</string>
+    <string name="action_login">Login</string>
+    <string name="action_join_group">Join Group</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_username">Username</string>
+    <string name="action_sign_in">Sign in or register</string>
 </resources>
