@@ -8,6 +8,8 @@ from threadManager import ThreadManager
 from threadedServer import ThreadedServer
 import time
 
+threadedServer = None
+
 def initializeThreadedServer(callback, threadManager):
     threadedServer = ThreadedServer(threadManager, ('', NetConstants.iServerBasePort), callback)
     if (threadedServer.isReady()):
@@ -20,7 +22,10 @@ def receivedMessage(connection, message):
     log(INFO, "receivedMessage = {}".format(message))
 
     # This function echoes the message back to the client.
-    self.threadedServer.replyMessage(connection, message)
+    if threadedServer is not None:
+        threadedServer.replyMessage(connection, message)
+    else:
+        log(ERROR, "threaded server is none!")
 
 if __name__ == '__main__':
     sDeviceName = socket.gethostname()
