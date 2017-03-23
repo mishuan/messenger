@@ -77,7 +77,7 @@ class ThreadedServer:
             try:
                 connection, clientAddress = self.serverSocket.accept()
                 connection.settimeout(NetConstants.iServerTimeout);
-                self.threadManager.launchNewThread(EThreadType.ThreadedServerWorker, self.receiveMessage, (connection,))
+                self.threadManager.launchNewThread(EThreadType.ThreadedServerWorker, self.receiveMessage, (clientAddress,connection,))
             except Exception as e:
                 log(ERROR, "Unable to accept new client, reason: {0}".format(e))
                 self.closeSocket()
@@ -108,7 +108,7 @@ class ThreadedServer:
             log(ERROR, "Msg: {}".format(message))
 
 
-    def receiveMessage(self, connection):
+    def receiveMessage(self, sSourceIpAddress, connection):
         """
             Function to receive message and invoke callback function
             params:
@@ -122,7 +122,7 @@ class ThreadedServer:
                 if serializedData:
                     message = json.loads(serializedData) # decode msg                     
                     log(DEBUG, '>>2 {}'.format(message))
-                    self.callbackFunction(connection, message)
+                    self.callbackFunction(sSourceIpAddress, connection, message)
                     
                 else:
                     raise Exception('Client disconnected')

@@ -36,7 +36,7 @@ class ThreadManager:
         thread = None
         try:
             self.threadLaunchLock.acquire(True)
-            thread = Thread(target = targetFunction, name = self.getThreadName(eThreadType, self.iThreadIndex), args = arrInArgs)
+            thread = Thread(target = targetFunction, name = "{}".format(self.iThreadIndex), args = arrInArgs)
             thread.start();
         except Exception as e:
             log(ERROR, "Unable to launch thread, reason: {0}".format(e))

@@ -34,16 +34,9 @@ class EMessageType(Enum):
     JoinGroup = 1
     NewMessage = 2
 
-class EMessageKey(Enum):
-    """
-        Enum class used along with eNetMessageType as the keys
-        for the NetMessage class dictionary
-    """
-    SourceId = 0
-    MessageType = 1
-
-    MessageGroupId = 2
-    MessageContents = 3
+class MessageKey:
+    MessageType = "messageType"
+    UserName = "username"
 
 """ Modified Data Structures """
 class Dictionary(dict):
