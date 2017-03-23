@@ -33,8 +33,10 @@ public class TcpClient {
     /**
      * Constructor of the class. OnMessagedReceived listens for the messages received from server
      */
-    public TcpClient(OnMessageReceived listener) {
+    public TcpClient(String ip, OnMessageReceived listener) {
         mMessageListener = listener;
+        if (!ip.equals("")) SERVER_IP = ip;
+        Log.e(Constants.TCP_DEBUG, SERVER_IP);
     }
 
     /**
@@ -72,7 +74,7 @@ public class TcpClient {
         mRun = true;
 
         try {
-            //here you must put your computer's IP address.
+            //here IP address inputted.
             InetAddress serverAddr = InetAddress.getByName(SERVER_IP);
 
             Log.e("TCP Client", "C: Connecting...");

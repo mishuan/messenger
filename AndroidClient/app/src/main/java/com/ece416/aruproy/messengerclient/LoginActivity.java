@@ -3,6 +3,7 @@ package com.ece416.aruproy.messengerclient;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 
@@ -20,7 +21,9 @@ public class LoginActivity extends AppCompatActivity {
     protected void loginOnClick(View v) {
         Intent i = new Intent(LoginActivity.this, ChatActivity.class);
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.username);
+        AutoCompleteTextView ipAddress = (AutoCompleteTextView) findViewById(R.id.ip_address);
         i.putExtra(Constants.USERNAME, source.getText().toString());
+        i.putExtra(Constants.IP, ipAddress.getText().toString());
         LoginActivity.this.startActivity(i);
     }
 }

@@ -7,5 +7,6 @@
 
     <!-- Strings related to login -->
     <string name="prompt_username">Username</string>
+    <string name="prompt_ip_address">Server IP Address</string>
     <string name="action_sign_in">Sign in or register</string>
 </resources>
