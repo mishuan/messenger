@@ -7,6 +7,16 @@
     android:fitsSystemWindows="true"
     tools:context="com.ece416.aruproy.messengerclient.ChatActivity">
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:onClick="joinOnClick"
+        android:src="@android:drawable/ic_dialog_email"
+        app:backgroundTint="@color/accent_material_light" />
+
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,19 +29,18 @@
             android:background="@color/accent_material_light"
             app:popupTheme="@style/AppTheme.PopupOverlay"
             android:touchscreenBlocksFocus="false"
-            android:transitionGroup="false" />
+            android:transitionGroup="false" >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+
+                android:text="@string/app_name"
+                android:id="@+id/toolbar_title" />
+        </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
 
     <include layout="@layout/content_group_page" />
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_email"
-        app:backgroundTint="@color/accent_material_light" />
 
 </android.support.design.widget.CoordinatorLayout>
