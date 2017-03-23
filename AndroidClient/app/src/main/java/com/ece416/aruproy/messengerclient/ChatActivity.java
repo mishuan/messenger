@@ -5,7 +5,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.PopupWindow;
 
 import org.json.JSONObject;
 
@@ -43,6 +46,8 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
+    private EditText etGroup;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,7 +61,7 @@ public class ChatActivity extends AppCompatActivity {
             Thread.sleep(1337);
             Map<String, Object> data = new HashMap<>();
             data.put(Constants.USERNAME_KEY, intent.getStringExtra(Constants.USERNAME));
-            data.put(Constants.MESSAGE_TYPE_KEY, "0");
+            data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP);
             JSONObject json = new JSONObject(data);
             Log.e("JSON Dictionary", json.toString());
             mTcpClient.sendMessage(json.toString());

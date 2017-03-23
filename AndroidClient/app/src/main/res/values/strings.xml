@@ -4,6 +4,10 @@
     <string name="action_login">Login</string>
     <string name="action_join_group">Join Group</string>
     <string name="title_activity_login">Sign in</string>
+    <string name="group_name">Group Name</string>
+    <string name="join">Join</string>
+    <string name="leave">Leave</string>
+
 
     <!-- Strings related to login -->
     <string name="prompt_username">Username</string>

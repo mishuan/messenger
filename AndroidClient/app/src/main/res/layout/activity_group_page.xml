@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:id="@+id/list_group"
     tools:context="com.ece416.aruproy.messengerclient.ChatActivity">
 
     <android.support.design.widget.FloatingActionButton
