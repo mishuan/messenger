@@ -99,8 +99,10 @@ class ThreadedServer:
                 message - Dictionary-formatted object storing the message
         """
         try:
+            log(DEBUG, ">>")
             serializedData = json.dumps(message)
             connection.send(serializedData)
+            log(DEBUG, "<<")
         except Exception as e:
             log(ERROR, "Unable to send message, reason: {}".format(e))
             log(ERROR, "Msg: {}".format(message))

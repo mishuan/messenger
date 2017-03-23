@@ -6,6 +6,16 @@ from enum import Enum
 from datetime import time
 
 """ Enumeration Declarations """
+class EQueryType(Enum):
+    Select = 0
+    Replace = 1
+    Delete = 2
+    Count = 3
+
+class EMessageStatus(Enum):
+    Undelivered = 0
+    Delivered = 1
+
 class ELoggerLevel(Enum):
     Debug = 0
     Warn = 1
@@ -20,8 +30,9 @@ class EThreadType(Enum):
     Database = 3
 
 class EMessageType(Enum):
-    StatusCheck = 0
-    NewMessage = 1
+    ListGroups = 0
+    JoinGroup = 1
+    NewMessage = 2
 
 class EMessageKey(Enum):
     """
@@ -56,15 +67,14 @@ class ThreadManagerConstants:
     iServerThreadsSatellite = 1
 
 class DatabaseManagerConstants:
+    sDatabaseName = "ece416database"
+    sUserInfoTableName = "UserInfo"
+    sUserGroupTableName = "UserGroup"
+    sConversionsTableName = "Conversations"
     sDatabaseHost = 'localhost'
     sUserName = 'root'
-    sDatabaseName = 'Lucerna'
-    sSummaryTableName = 'ModeSummaryTable'
-    sSettingsTableName = 'ModeSettingsTable'
-    sAttrId = 'id'
-    sAttrLblName = 'name'
-    attrStartTime = 'start_time'
-    sPayload = 'payload'
+    sPw = '204lester'
+
 
 class NetConstants:
     iClientThreadLimit = 2
