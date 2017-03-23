@@ -6,9 +6,11 @@ from constants import *
 from logger import *
 from threadManager import ThreadManager
 from threadedServer import ThreadedServer
+from databaseManager import DatabaseManager
 import time
 
 threadedServer = None
+databaseManager = None
 
 def initializeThreadedServer(callback, threadManager):
     threadedServer = ThreadedServer(threadManager, ('', NetConstants.iServerBasePort), callback)
@@ -31,5 +33,17 @@ if __name__ == '__main__':
     sDeviceName = socket.gethostname()
     threadManager = ThreadManager()
     threadedServer = initializeThreadedServer(receivedMessage, threadManager)
+    databaseManager = DatabaseManager()
+
+
+    # def insertUser(self, sUserName, timestamp = None):
+    databaseManager.insertUser("derp");
+    databaseManager.insertUser("a3roy");
+    databaseManager.insertUser("shyuan");
+    time.sleep(2);
+    databaseManager.insertUser("shyuan");
+    time.sleep(3);
+    databaseManager.insertUser("a3roy");
+
     while True:
         time.sleep(5)
