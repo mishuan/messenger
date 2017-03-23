@@ -12,6 +12,11 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class ChatActivity extends AppCompatActivity {
 
     private TcpClient mTcpClient;
@@ -66,7 +71,12 @@ public class ChatActivity extends AppCompatActivity {
 
         try {
             Thread.sleep(5000);
-            mTcpClient.sendMessage("{\"hello\":1}");
+            Map<String, Object> data = new HashMap<>();
+            data.put(Constants.USERNAME_KEY, intent.getStringExtra(Constants.USERNAME));
+            data.put(Constants.MESSAGE_TYPE_KEY, "0");
+            JSONObject json = new JSONObject(data);
+            Log.e("JSON Dictionary", json.toString());
+            mTcpClient.sendMessage(json.toString());
         } catch (InterruptedException e) {
 
             Thread.interrupted();

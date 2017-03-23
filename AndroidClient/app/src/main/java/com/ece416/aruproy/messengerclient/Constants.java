@@ -5,10 +5,11 @@ package com.ece416.aruproy.messengerclient;
  */
 
 public class Constants {
-    public static String SERVICE_DEBUG_TAG = "SERVER_SERVICE";
     public static String ACTIVITY_DEBUG_TAG = "GROUP_PAGE_ACTIVITY";
-    public static String SERVICE_INTENT_ID = "server_intent";
-    public static String DEFAULT_TESTING_STRING = "testing 1 2 3...";
-    public static String HOST = "https://www.google.com";
     public static String USERNAME= "username";
+    public static String MESSAGE_TYPE_KEY = "messageType";
+    public static String USERNAME_KEY = "username";
+    public static int ListGroups = 0;
+    public static int JoinGroup = 1;
+    public static int NewMessage = 2;
 }
