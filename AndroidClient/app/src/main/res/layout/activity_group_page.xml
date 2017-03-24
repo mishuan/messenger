@@ -42,6 +42,10 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_group_page" />
+    <ListView
+        android:layout_marginTop="60sp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/groups_list" />
 
 </android.support.design.widget.CoordinatorLayout>
