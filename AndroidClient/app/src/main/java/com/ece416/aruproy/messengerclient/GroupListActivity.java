@@ -3,19 +3,19 @@ package com.ece416.aruproy.messengerclient;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.PopupWindow;
 
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ChatActivity extends AppCompatActivity {
+public class GroupListActivity extends AppCompatActivity {
 
     private TcpClient mTcpClient;
 
@@ -46,8 +46,6 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    private EditText etGroup;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +70,31 @@ public class ChatActivity extends AppCompatActivity {
 
     protected void joinOnClick(View v) {
         Log.e(Constants.USERNAME, "floating action button got clicked!!");
+        AlertDialog.Builder mbuilder = new AlertDialog.Builder(GroupListActivity.this);
+        View mView = getLayoutInflater().inflate(R.layout.group_alert_dialog_layout, null);
+        mbuilder.setView(mView);
+        final AlertDialog dialog = mbuilder.create();
+
+        final EditText mGroupName = (EditText) mView.findViewById(R.id.group_name);
+        Button mLeave = (Button) mView.findViewById(R.id.leave_group);
+        Button mJoin = (Button) mView.findViewById(R.id.join_group);
+
+        mLeave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e(Constants.ACTIVITY_DEBUG_TAG, "Trying to LEAVE group: " + mGroupName.getText().toString());
+                dialog.hide();
+            }
+        });
+        mJoin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e(Constants.ACTIVITY_DEBUG_TAG, "Trying to JOIN group: " + mGroupName.getText().toString());
+                dialog.hide();
+            }
+        });
+
+        dialog.show();
     }
 
 
