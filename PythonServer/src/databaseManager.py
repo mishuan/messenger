@@ -2,6 +2,7 @@ import MySQLdb
 from constants import *
 from logger import *
 from timestamp import Timestamp
+import itertools
 
 class DatabaseManager:
     """
@@ -76,7 +77,7 @@ class DatabaseManager:
             params:
                 sQuery - string denoting the query to execute.
         """
-        log(DEBUG, ">>")
+        # log(DEBUG, ">>")
         response = None
         try:
             cursor = self.database.cursor()
@@ -86,10 +87,10 @@ class DatabaseManager:
             self.database.commit()
         except Exception as e:
             log(ERROR, "Unable to _executeQueries, reason: {}".format(e))
-        log(DEBUG, "<<")
-        return response
+        # log(DEBUG, "<<")
+        return list(itertools.chain(*response))
 
-    def _constructQuery(self, eQueryType, sTableName, listParams, listValues, sCondition = "", bDistinct = False):
+    def _constructQuery(self, eQueryType, sTableName, listParams, listValues = None, sCondition = "", bDistinct = False):
         """
             Function to convert the given parameters into a string that can be executed
             by a mysql server database.
@@ -118,7 +119,7 @@ class DatabaseManager:
             else:
                 sQuery = "SELECT {} FROM {}".format(sParams, sTableName)
             if listValues is not None:
-                log(ERROR, "listValues was found to be none!")
+                log(ERROR, "listValues was found to not be none for select!")
                 bValid = False
 
         elif eQueryType == EQueryType.Replace:
@@ -149,13 +150,51 @@ class DatabaseManager:
             sQuery = ""
         return sQuery
 
-#     sConversionsTableName = "Conversations"
+    def addMessageToGroup(self, sUsername, sGroupName, sMessage, sTimestamp = None, iId = None):
+        if iId is None:
+            iId = self.getUserId(sUsername)
+        if sTimestamp is None:
+            sTimestamp = Timestamp._formatTime(Timestamp.getRawTime())
 
+        if iId is not None:
+            sReplaceQuery = self._constructQuery(EQueryType.Replace, DatabaseManagerConstants.sConversionsTableName,
+                ("senderId","groupName","sentTime","status","message"), (iId, sGroupName, sTimestamp, EMessageStatus.Undelivered, sMessage))
+            response = self._executeQueryWithResponse(sReplaceQuery)
+        else:
+            log(WARN, "User {} doesn't exist in {}".format(sUsername, DatabaseManagerConstants.sUserInfoTableName))
+
+    # def updateMessageStatusForGroup(self, sGroupName):
+
+    # def getMessagesForUser(self, sUsername):
+    #     """
+    #         Function to get al 
+    #     """
+
+
+    def getUserIdsInGroup(self, sGroupName):
+        sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserGroupTableName,
+            ("id",),None,"groupName='{}'".format(sGroupName))
+        response = self._executeQueryWithResponse(sSelectQuery)
+        return response
+
+    def getGroupListForUser(self, sUsername, iId = None):
+        if iId is None:
+            iId = self.getUserId(sUsername)
+
+        response = None
+        if iId is not None:
+            sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserGroupTableName,
+                ("groupName",),None,"id={}".format(iId))
+            response = self._executeQueryWithResponse(sSelectQuery)
+        else:
+            log(WARN, "User {} doesn't exist in {}".format(sUsername, DatabaseManagerConstants.sUserInfoTableName))
+
+        return response
 
     def getGroupList(self):
         sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserGroupTableName,
-            ("groupName"),(),"",True)
-        response = self._executeQueryWithResponse(sSelectQuery);
+            ("groupName",),None,"",True)
+        response = self._executeQueryWithResponse(sSelectQuery)
         return response
 
     def getUserId(self, sUsername):
@@ -172,7 +211,7 @@ class DatabaseManager:
 
         iId = None
         if not bNoResponse:
-            iId = int(response[0][0])
+            iId = int(response[0])
         return iId
 
     def joinGroup(self, sUsername, sGroupName, iId = None):
