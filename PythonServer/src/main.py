@@ -23,29 +23,32 @@ def initializeThreadedServer(callback, threadManager):
 def receivedMessage(sSourceIpAddress, connection, message):
     log(INFO, "{} sent {}".format(sSourceIpAddress, message))
 
-
-    # TODO: CONVERT THE RECEIVED DICT OBJECT INTO DICTIONARY
     if isinstance(message, dict):
         message = Dictionary(message)
 
     if isinstance(message, Dictionary):
-        messageType = message[MessageKey.MessageType]
-        if messageType is not None:
+        messageType = int(message[MessageKey.MessageType])
+        username = message[MessageKey.Username]
 
-            #TODO: Convert messageType into integer
+        if message[MessageKey.MessageType] is not None and messageType is not None:
+
             if messageType == EMessageType.ListGroups:
-                username = message[MessageKey.MessageType]
-                log(INFO, "Contacted by user {}")
+                log(INFO, "Contacted by user {}".format(username))
 
                 if username is not None:
                     databaseManager.insertUser(username);
                 else:
                     log(ERROR, "username is None!")
 
+                # TODO: respond with list of groups
+
+            elif messageType == EMessageType.JoinGroup:
+                databaseManager.JoinGroup();
+
             else:
                 log(ERROR, "Unknown MessageType {}".format(messageType))
         else:
-            log(ERROR, "No MessageType specified!! {}".format(message))
+            log(ERROR, "No/invalid MessageType specified!! raw={}/parsed={}".format(message, messageType))
     else:
         log(ERROR, "The message is not a dictionary object!!".format(message))
 
@@ -62,15 +65,18 @@ if __name__ == '__main__':
     threadedServer = initializeThreadedServer(receivedMessage, threadManager)
     databaseManager = DatabaseManager()
 
-
-    # def insertUser(self, sUserName, timestamp = None):
     # databaseManager.insertUser("derp");
     # databaseManager.insertUser("a3roy");
     # databaseManager.insertUser("shyuan");
-    # time.sleep(2);
-    # databaseManager.insertUser("shyuan");
-    # time.sleep(3);
-    # databaseManager.insertUser("a3roy");
+
+    # databaseManager.joinGroup("a3roy","group1");
+    # databaseManager.joinGroup("a3roy","group2");
+    # databaseManager.joinGroup("a3roy","group3");
+    # databaseManager.joinGroup("shyuan","group1");
+    # databaseManager.joinGroup("shyuan","group2");
+    # databaseManager.joinGroup("shyuan","group3");
+
+    # databaseManager.exitGroup("shyuan","group3");
 
     while True:
         time.sleep(5)

@@ -33,10 +33,14 @@ class EMessageType(Enum):
     ListGroups = 0
     JoinGroup = 1
     NewMessage = 2
+    LeaveGroup = 3
 
 class MessageKey:
     MessageType = "messageType"
-    UserName = "username"
+    Username = "username"
+
+    Message = "message"
+    Timestamp = "timestamp"
 
 """ Modified Data Structures """
 class Dictionary(dict):
@@ -65,7 +69,7 @@ class DatabaseManagerConstants:
     sUserGroupTableName = "UserGroup"
     sConversionsTableName = "Conversations"
     sDatabaseHost = 'localhost'
-    sUserName = 'root'
+    sUsername = 'root'
     sPw = '204lester'
 
 
