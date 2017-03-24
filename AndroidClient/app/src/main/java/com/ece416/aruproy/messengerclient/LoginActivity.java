@@ -22,7 +22,7 @@ public class LoginActivity extends AppCompatActivity {
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.username);
         AutoCompleteTextView ipAddress = (AutoCompleteTextView) findViewById(R.id.ip_address);
         i.putExtra(Constants.USERNAME, source.getText().toString());
-        i.putExtra(Constants.IP, ipAddress.getText().toString());
+        ConnectTask.getInstance().setIp(ipAddress.getText().toString());
         LoginActivity.this.startActivity(i);
     }
 }

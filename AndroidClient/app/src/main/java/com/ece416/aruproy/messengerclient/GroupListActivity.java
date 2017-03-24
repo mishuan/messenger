@@ -1,12 +1,12 @@
 package com.ece416.aruproy.messengerclient;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,41 +24,56 @@ public class GroupListActivity extends AppCompatActivity {
     private ListView mListView;
     private String[] groupsList;
 
-    public class ConnectTask extends AsyncTask<String, String, TcpClient> {
+    private void showJoinLeaveGroupDialogAlert(AdapterView<?> parent, int position) {
+        final String selected = String.valueOf(parent.getItemAtPosition(position));
 
-        @Override
-        protected TcpClient doInBackground(String... message) {
+        Log.e("LIST ITEM CLICKED", "ITEM SELECTED: " + selected);
 
-            //we create a TCPClient object
-            mTcpClient = new TcpClient(getIntent().getStringExtra(Constants.IP), new TcpClient.OnMessageReceived() {
-                @Override
-                //here the messageReceived method is implemented
-                public void messageReceived(String message) {
-                    //this method calls the onProgressUpdate
-                    publishProgress(message);
-                }
-            });
-            mTcpClient.run();
-            return null;
-        }
+        AlertDialog.Builder mbuilder = new AlertDialog.Builder(GroupListActivity.this);
+        View mView = getLayoutInflater().inflate(R.layout.join_leave_group_alert_dialog_layout, null);
+        mbuilder.setView(mView);
+        final AlertDialog dialog = mbuilder.create();
 
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            //response received from server
-            Log.d("test", "response " + values[0]);
-            // TODO do something and populateList()
-            //process server response here....
-        }
+        Button mJoin = (Button) mView.findViewById(R.id.join_group);
+        Button mLeave = (Button) mView.findViewById(R.id.leave_group);
+
+        mJoin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e("LIST ITEM CLICKED", "JOINING: " + selected);
+                dialog.hide();
+                //TODO: go to next activity
+            }
+        });
+        mLeave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.e("LIST ITEM CLICKED", "LEAVING: " + selected);
+                dialog.hide();
+                //TODO: go to next activity
+            }
+        });
+
+        dialog.show();
     }
 
     private void populateList(){
-        Log.e("GROUP_LIST", groupsList[0]);
         ListAdapter listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, groupsList);
         mListView = (ListView) findViewById(R.id.groups_list);
-        Log.e("GROUP_LIST", listAdapter.toString());
-        Log.e("GROUP LIST", mListView.toString());
         mListView.setAdapter(listAdapter);
+
+        Log.e("STUPID DEBUG", "listAdapter seems to be set");
+
+        mListView.setOnItemClickListener(
+            new AdapterView.OnItemClickListener(){
+                @Override
+                public void onItemClick(AdapterView<?> parent, View v, int position, long id){
+                    showJoinLeaveGroupDialogAlert(parent, position);
+                }
+            }
+        );
+
+        Log.e("STUPID DEBUG", "onClickListener seems to be set");
     }
 
     @Override
@@ -67,9 +82,9 @@ public class GroupListActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         Log.e(Constants.USERNAME, intent.getStringExtra(Constants.USERNAME));
-
         setContentView(R.layout.activity_group_page);
-        new ConnectTask().execute("");
+        mTcpClient = ConnectTask.getInstance().getTcpClient();
+
         try {
             Thread.sleep(1337);
             Map<String, Object> data = new HashMap<>();
@@ -78,6 +93,7 @@ public class GroupListActivity extends AppCompatActivity {
             JSONObject json = new JSONObject(data);
             Log.e("Login JSON Dictionary", json.toString());
             mTcpClient.sendMessage(json.toString());
+            //TODO temporary list of groups
             groupsList = new String[]{"apple", "orange", "whatever", "idkm", "running out of things"};
             populateList();
         } catch (InterruptedException e) {
@@ -93,19 +109,19 @@ public class GroupListActivity extends AppCompatActivity {
         final AlertDialog dialog = mbuilder.create();
 
         final EditText mGroupName = (EditText) mView.findViewById(R.id.group_name);
-        Button mJoin = (Button) mView.findViewById(R.id.join_group);
+        Button mJoin = (Button) mView.findViewById(R.id.join_new_group);
 
         mJoin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.e(Constants.ACTIVITY_DEBUG_TAG, "Trying to JOIN group: " + mGroupName.getText().toString());
                 dialog.hide();
+                //TODO: go to next activity
             }
         });
 
         dialog.show();
     }
-
 
     @Override
     public void onResume() {
