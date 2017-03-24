@@ -42,7 +42,7 @@ def receivedMessage(sSourceIpAddress, connection, message):
 
                 # TODO: respond with list of groups
 
-            elif messageType == EMessageType.JoinGroup:
+            # elif messageType == EMessageType.JoinGroup:
                 # sGroupName = message[MessageKey]
                 # databaseManager.joinGroup("a3roy","group1");
 
