@@ -42,8 +42,9 @@ def receivedMessage(sSourceIpAddress, connection, message):
 
                 # TODO: respond with list of groups
 
-            elif messageType == EMessageType.JoinGroup:
-                databaseManager.JoinGroup();
+            # elif messageType == EMessageType.JoinGroup:
+                # sGroupName = message[MessageKey]
+                # databaseManager.joinGroup("a3roy","group1");
 
             else:
                 log(ERROR, "Unknown MessageType {}".format(messageType))
@@ -77,6 +78,18 @@ if __name__ == '__main__':
     # databaseManager.joinGroup("shyuan","group3");
 
     # databaseManager.exitGroup("shyuan","group3");
+
+
+    # log(INFO,"group1 {}".format(databaseManager.getUserIdsInGroup("group1")))
+    # log(INFO,"group3 {}".format(databaseManager.getUserIdsInGroup("group3")))
+    # log(INFO,"getGroupList {}".format(databaseManager.getGroupList()))
+    # log(INFO,"a3roy {}".format(databaseManager.getGroupListForUser("a3roy")))
+    # log(INFO,"shyuan {}".format(databaseManager.getGroupListForUser("shyuan")))
+
+    # databaseManager.addMessageToGroup("a3roy", "group1", "hello world!")
+    # databaseManager.addMessageToGroup("shyuan", "group1", "phew!")
+    # def addMessageToGroup(self, sUsername, sGroupName, sMessage, sTimestamp = None):
+
 
     while True:
         time.sleep(5)
