@@ -16,6 +16,7 @@ import android.widget.ListView;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GroupListActivity extends AppCompatActivity {
@@ -23,6 +24,7 @@ public class GroupListActivity extends AppCompatActivity {
     private TcpClient mTcpClient;
     private ListView mListView;
     private String[] groupsList;
+    private boolean DEBUG = true;
 
     private void showJoinLeaveGroupDialogAlert(AdapterView<?> parent, int position) {
         final String selected = String.valueOf(parent.getItemAtPosition(position));
@@ -61,9 +63,6 @@ public class GroupListActivity extends AppCompatActivity {
         ListAdapter listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, groupsList);
         mListView = (ListView) findViewById(R.id.groups_list);
         mListView.setAdapter(listAdapter);
-
-        Log.e("STUPID DEBUG", "listAdapter seems to be set");
-
         mListView.setOnItemClickListener(
             new AdapterView.OnItemClickListener(){
                 @Override
@@ -72,8 +71,6 @@ public class GroupListActivity extends AppCompatActivity {
                 }
             }
         );
-
-        Log.e("STUPID DEBUG", "onClickListener seems to be set");
     }
 
     @Override
@@ -86,15 +83,24 @@ public class GroupListActivity extends AppCompatActivity {
         mTcpClient = ConnectTask.getInstance().getTcpClient();
 
         try {
-            Thread.sleep(1337);
             Map<String, Object> data = new HashMap<>();
             data.put(Constants.USERNAME_KEY, intent.getStringExtra(Constants.USERNAME));
             data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP);
             JSONObject json = new JSONObject(data);
             Log.e("Login JSON Dictionary", json.toString());
             mTcpClient.sendMessage(json.toString());
+            Thread.sleep(1337);
+
             //TODO temporary list of groups
-            groupsList = new String[]{"apple", "orange", "whatever", "idkm", "running out of things"};
+            if (DEBUG) {
+                groupsList = new String[]{"apple", "orange", "whatever", "idkm", "running out of things"};
+            } else {
+                // TODO: maybe fix all these sketchy operations, but whatever
+                Map<String, Object> map = ConnectTask.getInstance().getMessageForActivity(MessageType.LIST_GROUP);
+                List<String> list = (List<String>) map.get(Constants.GROUPS_KEY);
+                groupsList = (String[]) list.toArray();
+            }
+
             populateList();
         } catch (InterruptedException e) {
             Thread.interrupted();

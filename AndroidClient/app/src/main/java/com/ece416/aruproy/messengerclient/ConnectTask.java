@@ -3,8 +3,8 @@ package com.ece416.aruproy.messengerclient;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -16,7 +16,8 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
     private static ConnectTask instance = null;
     private static TcpClient mTcpClient;
     private static String ipAddress = null;
-    private static Queue<ArrayList<String>> messageQueue = new LinkedList<>();
+    private static String portNumber = null;
+    private static Queue<Map<String, Object>> messageQueue = new LinkedList<>();
 
     private ConnectTask() {}
 
@@ -27,8 +28,9 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         return instance;
     }
 
-    public void setIp(String ip){
+    public void setIpAndPort(String ip, String port){
         ipAddress = ip;
+        portNumber = port;
         instance.execute("");
     }
 
@@ -41,16 +43,18 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
     }
 
 
-    // TODO: finish this up
-    public ArrayList<String> getMessageForActivity(String id) {
-        return new ArrayList<String>();
+    public Map<String, Object> getMessageForActivity(MessageType type) {
+        while (MessageType.valueOf(String.valueOf(messageQueue.peek().get(Constants.MESSAGE_TYPE_KEY))) != type) {
+            messageQueue.poll();
+        }
+        return messageQueue.poll();
     }
 
     @Override
     protected TcpClient doInBackground(String... message) {
 
         //we create a TCPClient object
-        mTcpClient = new TcpClient(ipAddress, new TcpClient.OnMessageReceived() {
+        mTcpClient = new TcpClient(ipAddress, portNumber, new TcpClient.OnMessageReceived() {
             @Override
             //here the messageReceived method is implemented
             public void messageReceived(String message) {
@@ -67,6 +71,11 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         super.onProgressUpdate(values);
         //response received from server
         Log.d("test", "response " + values[0]);
-        //process server response here....
+        try {
+            Map<String, Object> map = JSONUtil.jsonToMap(values[0]);
+            messageQueue.add(map);
+        } catch (Exception e) {
+            Log.e("JSON_EXCEPTION", "Error converting:\n" + values[0] + "\nTo a Java Map");
+        }
     }
 }

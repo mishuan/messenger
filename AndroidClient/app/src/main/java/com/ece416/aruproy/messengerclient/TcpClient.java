@@ -18,7 +18,7 @@ import java.net.Socket;
 public class TcpClient {
 
     public static String SERVER_IP = "10.0.2.22"; //server IP address
-    public static final int SERVER_PORT = 6000;
+    public static int SERVER_PORT = 6000;
     // message to send to the server
     private String mServerMessage;
     // sends message received notifications
@@ -33,10 +33,11 @@ public class TcpClient {
     /**
      * Constructor of the class. OnMessagedReceived listens for the messages received from server
      */
-    public TcpClient(String ip, OnMessageReceived listener) {
+    public TcpClient(String ip, String port, OnMessageReceived listener) {
         mMessageListener = listener;
         if (!ip.equals("")) SERVER_IP = ip;
-        Log.e(Constants.TCP_DEBUG, SERVER_IP);
+        if (!port.equals("")) SERVER_PORT= Integer.valueOf(port);
+        Log.e(Constants.TCP_DEBUG, "SERVER IP: " + SERVER_IP + "; PORT NUMBER: " + SERVER_PORT);
     }
 
     /**
