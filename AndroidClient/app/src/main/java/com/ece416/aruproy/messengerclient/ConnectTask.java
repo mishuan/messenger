@@ -32,6 +32,10 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         instance.execute("");
     }
 
+    public String getIp(){
+        return ipAddress;
+    }
+
     public TcpClient getTcpClient() {
         return mTcpClient;
     }
