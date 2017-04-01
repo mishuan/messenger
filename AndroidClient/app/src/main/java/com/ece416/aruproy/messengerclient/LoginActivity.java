@@ -30,7 +30,7 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         try {
-            Thread.sleep(1337);
+            Thread.sleep(500);
         } catch (Exception e) {
             Log.e("LOGIN ACTIVITY THREAD", "Thread didn't actually sleep???");
         }

@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GroupListActivity extends AppCompatActivity {
+public class GroupListActivity extends AppCompatActivity implements Observer {
 
     private TcpClient mTcpClient;
     private ListView mListView;
@@ -55,7 +55,15 @@ public class GroupListActivity extends AppCompatActivity {
                 dialog.hide();
                 groupsList.remove(position);
                 arrayAdapter.notifyDataSetChanged();
-                Log.e("CHANGED LIST", groupsList.toString());
+
+                // construct LEAVE_GROUP json to send to server
+                Map<String, Object> data = new HashMap<>();
+                data.put(Constants.USERNAME_KEY, getIntent().getStringExtra(Constants.USERNAME));
+                data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LEAVE_GROUP.getValue());
+                data.put(Constants.GROUP_NAME_KEY, selected);
+                JSONObject json = new JSONObject(data);
+                Log.e("LEAVE_GROUP Dictionary", json.toString());
+                mTcpClient.sendMessage(json.toString());
             }
         });
 
@@ -77,33 +85,33 @@ public class GroupListActivity extends AppCompatActivity {
     }
 
     @Override
+    public void update() {
+        groupsList = ConnectTask.getGroupList();
+        Log.e("GroupListActivity", groupsList.toString());
+        populateList();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ConnectTask.setListObserver(this);
+        ConnectTask.setContext(getApplicationContext());
 
         Intent intent = getIntent();
         Log.e(Constants.USERNAME, intent.getStringExtra(Constants.USERNAME));
         setContentView(R.layout.activity_group_page);
         mTcpClient = ConnectTask.getInstance().getTcpClient();
 
-        try {
-            ConnectTask.setContext(getApplicationContext());
-            Map<String, Object> data = new HashMap<>();
-            data.put(Constants.USERNAME_KEY, intent.getStringExtra(Constants.USERNAME));
-            data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP.getValue());
-            JSONObject json = new JSONObject(data);
-            Log.e("Login JSON Dictionary", json.toString());
-            mTcpClient.sendMessage(json.toString());
-            Thread.sleep(1337);
+        // construct LOGIN json to send to server
+        Map<String, Object> data = new HashMap<>();
+        data.put(Constants.USERNAME_KEY, intent.getStringExtra(Constants.USERNAME));
+        data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP.getValue());
+        JSONObject json = new JSONObject(data);
+        Log.e("Login JSON Dictionary", json.toString());
+        mTcpClient.sendMessage(json.toString());
 
-            if (DEBUG) {
-                groupsList = new ArrayList<>(Arrays.asList("apple", "orange", "whatever", "idkm", "running out of things"));
-            } else {
-                groupsList = ConnectTask.getGroupList();
-            }
-
-            populateList();
-        } catch (InterruptedException e) {
-            Thread.interrupted();
+        if (DEBUG) {
+            groupsList = new ArrayList<>(Arrays.asList("apple", "orange", "whatever", "idkm", "running out of things"));
         }
     }
 
@@ -124,6 +132,8 @@ public class GroupListActivity extends AppCompatActivity {
                 dialog.hide();
                 groupsList.add(groupName);
                 arrayAdapter.notifyDataSetChanged();
+
+                // construct JOIN_GROUP json to send to server
                 Map<String, Object> data = new HashMap<>();
                 data.put(Constants.USERNAME_KEY, getIntent().getStringExtra(Constants.USERNAME));
                 data.put(Constants.MESSAGE_TYPE_KEY, MessageType.JOIN_GROUP.getValue());
@@ -131,6 +141,7 @@ public class GroupListActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject(data);
                 Log.e("JOIN_GROUP Dictionary", json.toString());
                 mTcpClient.sendMessage(json.toString());
+
                 //TODO: go to next activity
             }
         });
@@ -152,4 +163,5 @@ public class GroupListActivity extends AppCompatActivity {
     public void onDestroy(){
         super.onDestroy();
     }
+
 }
