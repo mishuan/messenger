@@ -20,11 +20,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GroupListActivity extends AppCompatActivity implements Observer {
+public class GroupListActivity extends AppCompatActivity implements ListObserver, MessageObserver{
 
     private TcpClient mTcpClient;
     private ListView mListView;
     private List<String> groupsList;
+    private String username;
     private boolean DEBUG = false;
     private ArrayAdapter<String> arrayAdapter;
 
@@ -44,7 +45,9 @@ public class GroupListActivity extends AppCompatActivity implements Observer {
             public void onClick(View v) {
                 Log.e("LIST ITEM CLICKED", "JOINING: " + selected);
                 dialog.hide();
-                //TODO: go to next activity
+
+                // start message chat activity
+                joinGroupStartActivity(selected);
             }
         });
 
@@ -57,13 +60,7 @@ public class GroupListActivity extends AppCompatActivity implements Observer {
                 arrayAdapter.notifyDataSetChanged();
 
                 // construct LEAVE_GROUP json to send to server
-                Map<String, Object> data = new HashMap<>();
-                data.put(Constants.USERNAME_KEY, getIntent().getStringExtra(Constants.USERNAME));
-                data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LEAVE_GROUP.getValue());
-                data.put(Constants.GROUP_NAME_KEY, selected);
-                JSONObject json = new JSONObject(data);
-                Log.e("LEAVE_GROUP Dictionary", json.toString());
-                mTcpClient.sendMessage(json.toString());
+                tcpGroupAction(MessageType.LEAVE_GROUP, selected);
             }
         });
 
@@ -77,34 +74,37 @@ public class GroupListActivity extends AppCompatActivity implements Observer {
         mListView.setOnItemClickListener(
             new AdapterView.OnItemClickListener(){
                 @Override
-                public void onItemClick(AdapterView<?> parent, View v, int position, long id){
-                    showJoinLeaveGroupDialogAlert(parent, position);
+                public void onItemClick(AdapterView<?> parent, View v, int position, long id){showJoinLeaveGroupDialogAlert(parent, position);
                 }
             }
         );
     }
 
     @Override
-    public void update() {
+    public void updateList() {
         groupsList = ConnectTask.getGroupList();
         Log.e("GroupListActivity", groupsList.toString());
         populateList();
+    }
+
+
+    private void setUsername() {
+        username = getIntent().getStringExtra(Constants.USERNAME_KEY);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ConnectTask.setListObserver(this);
-        ConnectTask.setContext(getApplicationContext());
+        setUsername();
 
-        Intent intent = getIntent();
-        Log.e(Constants.USERNAME, intent.getStringExtra(Constants.USERNAME));
+        Log.e(Constants.USERNAME_KEY, username);
         setContentView(R.layout.activity_group_page);
         mTcpClient = ConnectTask.getInstance().getTcpClient();
 
         // construct LOGIN json to send to server
         Map<String, Object> data = new HashMap<>();
-        data.put(Constants.USERNAME_KEY, intent.getStringExtra(Constants.USERNAME));
+        data.put(Constants.USERNAME_KEY, username);
         data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP.getValue());
         JSONObject json = new JSONObject(data);
         Log.e("Login JSON Dictionary", json.toString());
@@ -114,6 +114,23 @@ public class GroupListActivity extends AppCompatActivity implements Observer {
             groupsList = new ArrayList<>(Arrays.asList("apple", "orange", "whatever", "idkm", "running out of things"));
         }
     }
+    protected void joinGroupStartActivity(String groupName) {
+        Intent i = new Intent(GroupListActivity.this, ChatActivity.class);
+        i.putExtra(Constants.USERNAME_KEY, username);
+        i.putExtra(Constants.GROUP_NAME_KEY, groupName);
+        GroupListActivity.this.startActivity(i);
+    }
+
+    protected void tcpGroupAction(MessageType mt, String groupName) {
+        Map<String, Object> data = new HashMap<>();
+        data.put(Constants.USERNAME_KEY, username);
+        data.put(Constants.MESSAGE_TYPE_KEY, mt.getValue());
+        data.put(Constants.GROUP_NAME_KEY, groupName);
+        JSONObject json = new JSONObject(data);
+        Log.e(mt.getValue() + " Dictionary", json.toString());
+        mTcpClient.sendMessage(json.toString());
+    }
+
 
     protected void joinOnClick(View v) {
         AlertDialog.Builder mbuilder = new AlertDialog.Builder(GroupListActivity.this);
@@ -134,15 +151,10 @@ public class GroupListActivity extends AppCompatActivity implements Observer {
                 arrayAdapter.notifyDataSetChanged();
 
                 // construct JOIN_GROUP json to send to server
-                Map<String, Object> data = new HashMap<>();
-                data.put(Constants.USERNAME_KEY, getIntent().getStringExtra(Constants.USERNAME));
-                data.put(Constants.MESSAGE_TYPE_KEY, MessageType.JOIN_GROUP.getValue());
-                data.put(Constants.GROUP_NAME_KEY, groupName);
-                JSONObject json = new JSONObject(data);
-                Log.e("JOIN_GROUP Dictionary", json.toString());
-                mTcpClient.sendMessage(json.toString());
+                tcpGroupAction(MessageType.JOIN_GROUP, groupName);
 
-                //TODO: go to next activity
+                // start message chat activity
+                joinGroupStartActivity(groupName);
             }
         });
 
@@ -152,6 +164,11 @@ public class GroupListActivity extends AppCompatActivity implements Observer {
     @Override
     public void onResume() {
         super.onResume();
+        setUsername();
+        ConnectTask.setContext(getApplicationContext());
+        ConnectTask.setMessageObserver(this);
+
+        // TODO: check for unread messages
     }
 
     @Override
@@ -164,4 +181,8 @@ public class GroupListActivity extends AppCompatActivity implements Observer {
         super.onDestroy();
     }
 
+    @Override
+    public void updateMessage() {
+
+    }
 }

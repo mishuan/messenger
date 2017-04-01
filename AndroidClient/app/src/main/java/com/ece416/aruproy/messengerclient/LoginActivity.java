@@ -23,7 +23,7 @@ public class LoginActivity extends AppCompatActivity {
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.username);
         AutoCompleteTextView ipAddress = (AutoCompleteTextView) findViewById(R.id.ip_address);
         AutoCompleteTextView portNumber = (AutoCompleteTextView) findViewById(R.id.port_number);
-        i.putExtra(Constants.USERNAME, source.getText().toString());
+        i.putExtra(Constants.USERNAME_KEY, source.getText().toString());
 
         if (ConnectTask.getInstance().getIp() == null) {
             ConnectTask.setIpAndPort(ipAddress.getText().toString(), portNumber.getText().toString());

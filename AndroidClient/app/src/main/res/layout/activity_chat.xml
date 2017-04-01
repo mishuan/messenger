@@ -10,4 +10,63 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.ece416.aruproy.messengerclient.ChatActivity">
 
+    <TextView
+        android:maxLines = "1000"
+        android:scrollbars = "vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:id="@+id/message_log"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/RelativeLayout01"
+        android:layout_below="@+id/group_members" />
+
+    <RelativeLayout
+        android:id="@+id/RelativeLayout01" android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true">
+        <Button android:id="@+id/send_message_button"
+            style="?android:textAppearanceSmall"
+            android:layout_alignParentRight="true"
+            android:text="@string/action_send_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="sendOnClick"/>
+        <AutoCompleteTextView  android:id="@+id/message"
+            android:layout_alignParentLeft="true"
+            android:layout_toLeftOf="@id/send_message_button"
+            android:layout_centerVertical="true"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/prompt_message"
+            android:maxLines="1" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/group_joined"
+        android:text="Group"
+        android:textStyle="bold"
+        android:textSize="25sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/group_members"
+        android:text="Members"
+        android:textColor="@color/colorPrimary"
+        android:textSize="15sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_below="@+id/group_joined"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:paddingBottom="20sp"/>
+
 </RelativeLayout>

@@ -1,13 +1,89 @@
 package com.ece416.aruproy.messengerclient;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.AutoCompleteTextView;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
-public class ChatActivity extends AppCompatActivity {
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ChatActivity extends AppCompatActivity implements MessageObserver {
+
+    private String groupName;
+    private String username;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ConnectTask.setContext(getApplicationContext());
+        ConnectTask.setMessageObserver(this);
+        setupChat();
+    }
+
+    protected void setupChat() {
+        Intent intent = getIntent();
+        TextView tv = (TextView)findViewById(R.id.group_joined);
+        groupName = intent.getStringExtra(Constants.GROUP_NAME_KEY);
+        username = intent.getStringExtra(Constants.USERNAME_KEY);
+        tcpSendMessage("");
+        tv.setText("Group: " + groupName);
+    }
+
+    protected void tcpSendMessage(String message){
+        Map<String, Object> data = new HashMap<>();
+        data.put(Constants.USERNAME_KEY, username);
+        data.put(Constants.MESSAGE_TYPE_KEY, MessageType.NEW_MESSAGE.getValue());
+        if (!message.equals("")) data.put(Constants.MESSAGE_KEY, message);
+        data.put(Constants.GROUP_NAME_KEY, groupName);
+        JSONObject json = new JSONObject(data);
+        Log.e("Send JSON Dictionary", json.toString());
+        ConnectTask.getInstance().getTcpClient().sendMessage(json.toString());
+    }
+
+
+    protected void sendOnClick(View v) {
+        AutoCompleteTextView messageTextView = (AutoCompleteTextView) findViewById(R.id.message);
+        String message = messageTextView.getText().toString();
+        tcpSendMessage(message);
+        messageTextView.setText("");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+    }
+
+    @Override
+    public void updateMessage() {
+        TextView tv = (TextView)findViewById(R.id.group_members);
+        tv.setText("Members: " + ConnectTask.getMembersList().toString());
+        List<List<String>> messages = ConnectTask.getMessagesForGroup(groupName);
+        if (messages == null) return;
+        TextView tvMessageLog= (TextView) findViewById(R.id.message_log);
+        String messageLog = tvMessageLog.getText().toString();
+        for (List<String> m : messages) {
+            messageLog += m.get(0) + ": " + m.get(3) + "\n";
+        }
+        Log.e("CURRENT CHAT", messageLog);
+        tvMessageLog.setText(messageLog);
     }
 }

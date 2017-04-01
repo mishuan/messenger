@@ -8,11 +8,9 @@ import android.widget.Toast;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
-import java.util.Queue;
 
 /**
  * Created by ilikecalculus on 2017-03-24.
@@ -26,9 +24,11 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
     private static String portNumber = null;
     private static Context mContext = null;
     private static List<String> groupList = new ArrayList<>();
-    private static Queue<Map<String, Object>> messageQueue = new LinkedList<>();
+    private static List<String> membersList = new ArrayList<>();
+    private static Map<String, List<List<String>>> messageQueue = new HashMap<>();
 
-    private static Observer listObserver;
+    private static ListObserver listObserver;
+    private static MessageObserver messageObserver;
 
     private ConnectTask() {}
 
@@ -39,18 +39,40 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         return instance;
     }
 
-    public static void setListObserver(Observer o) {
+    public static void setListObserver(ListObserver o) {
         listObserver = o;
     }
+
+    public static void setMessageObserver(MessageObserver o) {
+        messageObserver = o;
+    }
+
+    public static void execute() {
+        instance.execute("");
+    }
+
 
     public static void setIpAndPort(String ip, String port){
         ipAddress = ip;
         portNumber = port;
-        instance.execute("");
+        execute();
+    }
+
+    public static List<List<String>> getMessagesForGroup(String key) {
+        if (messageQueue.containsKey(key)) {
+            List<List<String>> list = messageQueue.get(key);
+            messageQueue.remove(key);
+            return list;
+        }
+        return null;
     }
 
     public static List<String> getGroupList() {
         return groupList;
+    }
+
+    public static List<String> getMembersList() {
+        return membersList;
     }
 
     public static void setContext(Context context){
@@ -96,7 +118,6 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         Log.e("CONNECT_TASK", "response " + values[0]);
         try {
             Map<String, Object> map = JSONUtil.jsonToMap(values[0]);
-            MessageType mt = MessageType.get(map.get(Constants.MESSAGE_TYPE_KEY).toString());
             switch(MessageType.get(map.get(Constants.MESSAGE_TYPE_KEY).toString())) {
                 case JOIN_GROUP:
                     toastGroupOperation(map, MessageType.JOIN_GROUP);
@@ -110,11 +131,30 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
                     groupList = map.get(Constants.GROUPS_KEY) != null
                             ? (List<String>) map.get(Constants.GROUPS_KEY)
                             : groupList;
-                    listObserver.update();
+                    listObserver.updateList();
                     break;
 
                 case NEW_MESSAGE:
-                    // TODO: finish me plz
+                    Map<String, Object> messageMap = (Map<String, Object>) map.get(Constants.MESSAGE_KEY);
+                    for (String key : messageMap.keySet()) {
+                        List<Object> currMsgList = (List<Object>) messageMap.get(key);
+                        if (currMsgList == null) continue;
+                        Log.d("PROCESSING...", currMsgList.toString());
+                        for(int i = 0; i < currMsgList.size(); i++) {
+                            List<String> currMessage = (List<String>) currMsgList.get(i);
+                            if (!messageQueue.containsKey(key)){
+                                messageQueue.put(key, new ArrayList<List<String>>());
+                            }
+                            messageQueue.get(key).add(currMessage);
+                        }
+                    }
+
+                    membersList = (List<String>) map.get(Constants.MEMBERS_KEY);
+
+                    Log.d("CURRENT MEMBER LIST", membersList.toString());
+                    Log.d("CURRENT QUEUE", messageQueue.toString());
+
+                    messageObserver.updateMessage();
                     break;
 
                 default:
