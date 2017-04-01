@@ -4,19 +4,32 @@ from logger import *
 class Timestamp:
     @staticmethod
     def _getTimeFormat():
-        return '%Y-%m-%d %H:%M:%S.%f'
+        return '%Y-%m-%d %H:%M:%S'
+        # return '%Y-%m-%d %H:%M:%S.%f'
 
     @staticmethod
     def _formatTime(time):
         """
             convert datetime object into the standard formatted timestamp string
         """
-        strTime = "0000-00-00 00:00:00.000000"
+        # strTime = "0000-00-00 00:00:00.000000"
+        strTime = "0000-00-00 00:00:00"
         if time is not None:
-            strTime = "{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:06d}".format(
+            # strTime = "{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}.{:06d}".format(
+            #     time.year, time.month, time.day, time.hour,
+            #     time.minute, time.second, time.microsecond)
+
+            strTime = "{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(
                 time.year, time.month, time.day, time.hour,
-                time.minute, time.second, time.microsecond)
+                time.minute, time.second)
         return strTime
+
+    @staticmethod
+    def getNumberOfSeconds(timestamp):
+        sTotalSeconds = None
+        if isinstance(timestamp, datetime):
+            sTotalSeconds = timestamp.strftime("%s")
+        return sTotalSeconds
 
     @staticmethod
     def _getRawTimeFromString(strTime):

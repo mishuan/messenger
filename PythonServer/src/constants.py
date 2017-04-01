@@ -41,6 +41,8 @@ class MessageKey:
 
     Message = "message"
     Timestamp = "timestamp"
+    GroupName = "groupName"
+    GroupList = "groupList"
 
 """ Modified Data Structures """
 class Dictionary(dict):
@@ -71,7 +73,6 @@ class DatabaseManagerConstants:
     sDatabaseHost = 'localhost'
     sUsername = 'root'
     sPw = '204lester'
-
 
 class NetConstants:
     iClientThreadLimit = 2

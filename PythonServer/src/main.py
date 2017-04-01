@@ -23,28 +23,54 @@ def initializeThreadedServer(callback, threadManager):
 def receivedMessage(sSourceIpAddress, connection, message):
     log(INFO, "{} sent {}".format(sSourceIpAddress, message))
 
+    response = Dictionary()
+
     if isinstance(message, dict):
         message = Dictionary(message)
 
     if isinstance(message, Dictionary):
         messageType = int(message[MessageKey.MessageType])
-        username = message[MessageKey.Username]
+        sUsername = str(message[MessageKey.Username])
+
 
         if message[MessageKey.MessageType] is not None and messageType is not None:
-
             if messageType == EMessageType.ListGroups:
-                log(INFO, "Contacted by user {}".format(username))
+                log(INFO, "Contacted by user {}".format(sUsername))
 
-                if username is not None:
-                    databaseManager.insertUser(username);
+                if sUsername is not None:
+                    databaseManager.insertUser(sUsername);
                 else:
-                    log(ERROR, "username is None!")
+                    log(ERROR, "sUsername is None!")
 
-                # TODO: respond with list of groups
+                response[MessageKey.MessageType] = str(EMessageType.ListGroups)
+                response[MessageKey.GroupList] = databaseManager.getGroupList()
 
-            # elif messageType == EMessageType.JoinGroup:
-                # sGroupName = message[MessageKey]
-                # databaseManager.joinGroup("a3roy","group1");
+            elif messageType == EMessageType.JoinGroup:
+                sGroupName = message[MessageKey.GroupName]
+                databaseManager.joinGroup(sUsername, sGroupName)
+
+                response[MessageKey.MessageType] = str(EMessageType.JoinGroup)
+                response[MessageKey.GroupName] = sGroupName
+
+            elif messageType == EMessageType.LeaveGroup:
+                sGroupName = message[MessageKey.GroupName]
+                databaseManager.LeaveGroup(sUsername, sGroupName)
+
+                response[MessageKey.MessageType] = str(EMessageType.ListGroups)
+                response[MessageKey.GroupList] = databaseManager.getGroupList()
+
+            elif messageType == EMessageType.NewMessage:
+                sGroupName = message[MessageKey.GroupName]
+                sMessage = message[MessageKey.Message]
+
+                # if sMessage is none, the client is just requesting new msgs
+                if sMessage is not None:
+                    # insert the message if its not None
+                    databaseManager.insertMessage(sUsername, sGroupName, sMessage)
+
+                dictNewMessages = databaseManager.getMessagesForUser(sUsername)
+                response[MessageKey.MessageType] = str(EMessageType.NewMessage)
+                response[MessageKey.Message] = dictNewMessages
 
             else:
                 log(ERROR, "Unknown MessageType {}".format(messageType))
@@ -53,10 +79,9 @@ def receivedMessage(sSourceIpAddress, connection, message):
     else:
         log(ERROR, "The message is not a dictionary object!!".format(message))
 
-
     # This function echoes the message back to the client.
     if threadedServer is not None:
-        threadedServer.replyMessage(connection, message)
+        threadedServer.replyMessage(connection, response)
     else:
         log(ERROR, "threaded server is none!")
 
@@ -80,16 +105,17 @@ if __name__ == '__main__':
     # databaseManager.exitGroup("shyuan","group3");
 
 
-    # log(INFO,"group1 {}".format(databaseManager.getUserIdsInGroup("group1")))
-    # log(INFO,"group3 {}".format(databaseManager.getUserIdsInGroup("group3")))
+    # log(INFO,"group1 {}".format(databaseManager.getUsersInGroup("group1")))
+    # log(INFO,"group3 {}".format(databaseManager.getUsersInGroup("group3")))
     # log(INFO,"getGroupList {}".format(databaseManager.getGroupList()))
     # log(INFO,"a3roy {}".format(databaseManager.getGroupListForUser("a3roy")))
     # log(INFO,"shyuan {}".format(databaseManager.getGroupListForUser("shyuan")))
 
-    # databaseManager.addMessageToGroup("a3roy", "group1", "hello world!")
-    # databaseManager.addMessageToGroup("shyuan", "group1", "phew!")
-    # def addMessageToGroup(self, sUsername, sGroupName, sMessage, sTimestamp = None):
+    # databaseManager.insertMessage("a3roy", "group1", "hello world!")
+    # databaseManager.insertMessage("shyuan", "group1", "phew!")
 
+    # log(INFO, "msgs={}".format(databaseManager.getMessagesForUser("a3roy")))
 
     while True:
         time.sleep(5)
+

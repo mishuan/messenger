@@ -20,7 +20,7 @@ class DatabaseManager:
             log(ERROR, "Unable to connect to database! reason: {}".format(e))
         log(DEBUG, "<<")
 
-    def _constructParameters(self, listParams):
+    def _constructParameters(self, listParams, bIsSelectQuery = False):
         """
             Function to convert listParams to a format that is understandable by the mysql server.
             Function returns the formatted string of arguments.
@@ -29,13 +29,15 @@ class DatabaseManager:
         bValid = (listParams is not None)
 
         if bValid:
-            sParams = "("
+            if not bIsSelectQuery:
+                sParams = "("
             for currentArg in listParams:
                 sParams += str(currentArg)
                 sParams += ","
 
             sParams = sParams[:-1]
-            sParams += ")"
+            if not bIsSelectQuery:
+                sParams += ")"
 
         return sParams
 
@@ -50,7 +52,7 @@ class DatabaseManager:
         if bValid:
             sValues = "("
             for currentArg in listValues:
-                if (type(currentArg) is str):
+                if isinstance(currentArg, str):
                     sValues += "'" + str(currentArg) + "'"
                 else:
                     sValues += str(currentArg)
@@ -60,14 +62,6 @@ class DatabaseManager:
             sValues += ")"
             
         return sValues
-
-    # def _constructConditions(self, listParams, listValues):
-    #     """
-    #         Function to construct the string containing the conditions such that the MySQL
-    #         database can interpret the conditions.
-    #     """
-    #     return ""
-    #     # TODO: implement this!
 
     def _executeQueryWithResponse(self, sQuery):
         """
@@ -90,6 +84,27 @@ class DatabaseManager:
         # log(DEBUG, "<<")
         return list(itertools.chain(*response))
 
+    def _executeQueryWithRawResponse(self, sQuery):
+        """
+            Function to execute the specified query and return the response as a string.
+            Returns the response of the query as a string.
+            
+            params:
+                sQuery - string denoting the query to execute.
+        """
+        # log(DEBUG, ">>")
+        response = None
+        try:
+            cursor = self.database.cursor()
+            cursor.execute(sQuery)
+            response = cursor.fetchall()
+            cursor.close()
+            self.database.commit()
+        except Exception as e:
+            log(ERROR, "Unable to _executeQueries, reason: {}".format(e))
+        # log(DEBUG, "<<")
+        return response
+
     def _constructQuery(self, eQueryType, sTableName, listParams, listValues = None, sCondition = "", bDistinct = False):
         """
             Function to convert the given parameters into a string that can be executed
@@ -98,7 +113,7 @@ class DatabaseManager:
             params:
                 eQueryType - EQueryType enum that denotes the type of query
 
-                sTableName - name of the table to perform the query on.
+                sTableName - username of the table to perform the query on.
 
                 listParams - list of string objects denoting the parameters.
 
@@ -110,7 +125,7 @@ class DatabaseManager:
         sQuery = ""
         bValid = True;
 
-        sParams = self._constructParameters(listParams)
+        sParams = self._constructParameters(listParams, (eQueryType == EQueryType.Select))
         sValues = self._constructValues(listValues)
 
         if eQueryType == EQueryType.Select:
@@ -150,44 +165,18 @@ class DatabaseManager:
             sQuery = ""
         return sQuery
 
-    def addMessageToGroup(self, sUsername, sGroupName, sMessage, sTimestamp = None, iId = None):
-        if iId is None:
-            iId = self.getUserId(sUsername)
-        if sTimestamp is None:
-            sTimestamp = Timestamp._formatTime(Timestamp.getRawTime())
-
-        if iId is not None:
-            sReplaceQuery = self._constructQuery(EQueryType.Replace, DatabaseManagerConstants.sConversionsTableName,
-                ("senderId","groupName","sentTime","status","message"), (iId, sGroupName, sTimestamp, EMessageStatus.Undelivered, sMessage))
-            response = self._executeQueryWithResponse(sReplaceQuery)
-        else:
-            log(WARN, "User {} doesn't exist in {}".format(sUsername, DatabaseManagerConstants.sUserInfoTableName))
-
-    # def updateMessageStatusForGroup(self, sGroupName):
-
-    # def getMessagesForUser(self, sUsername):
-    #     """
-    #         Function to get al 
-    #     """
-
-
-    def getUserIdsInGroup(self, sGroupName):
+    def getUsersInGroup(self, sGroupName):
         sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserGroupTableName,
-            ("id",),None,"groupName='{}'".format(sGroupName))
+            ("username",),None,"groupName='{}'".format(sGroupName))
         response = self._executeQueryWithResponse(sSelectQuery)
         return response
 
-    def getGroupListForUser(self, sUsername, iId = None):
-        if iId is None:
-            iId = self.getUserId(sUsername)
-
+    def getGroupListForUser(self, sUsername):
         response = None
-        if iId is not None:
-            sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserGroupTableName,
-                ("groupName",),None,"id={}".format(iId))
-            response = self._executeQueryWithResponse(sSelectQuery)
-        else:
-            log(WARN, "User {} doesn't exist in {}".format(sUsername, DatabaseManagerConstants.sUserInfoTableName))
+
+        sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserGroupTableName,
+            ("groupName",),None,"username='{}'".format(sUsername))
+        response = self._executeQueryWithResponse(sSelectQuery)
 
         return response
 
@@ -197,53 +186,33 @@ class DatabaseManager:
         response = self._executeQueryWithResponse(sSelectQuery)
         return response
 
-    def getUserId(self, sUsername):
-        """
-            Function to return an integer representing the id of the specified username.
-        """
+    def getLastContactTime(self, sUsername):
         sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserInfoTableName,
-            ("id",), None, "name='{}'".format(sUsername))
-
+            ("lastContactTime",), None, "username='{}'".format(sUsername) )
         response = self._executeQueryWithResponse(sSelectQuery)
 
-        bNoResponse = (response is None) or \
-            ( (response is not None) and (not response) );
+        # log(INFO, "{} - {} - {}".format(response, response[0], Timestamp._formatTime(response[0])))
 
-        iId = None
-        if not bNoResponse:
-            iId = int(response[0])
-        return iId
+        return Timestamp._formatTime(response[0])
 
-    def joinGroup(self, sUsername, sGroupName, iId = None):
+    def joinGroup(self, sUsername, sGroupName):
         """
             Function to add specified username to the specified groupName.
         """
-        if iId is None:
-            iId = self.getUserId(sUsername)
+        # Exit the group if already joined..
+        self.exitGroup(sUsername, sGroupName)
 
-        if iId is not None:
-            # Exit the group if already joined..
-            self.exitGroup(sUsername, sGroupName, iId)
+        sReplaceQuery = self._constructQuery(EQueryType.Replace, DatabaseManagerConstants.sUserGroupTableName,
+            ("username","groupName"), (sUsername,sGroupName))
+        self._executeQueryWithResponse(sReplaceQuery)
 
-            sReplaceQuery = self._constructQuery(EQueryType.Replace, DatabaseManagerConstants.sUserGroupTableName,
-                ("id","groupName"), (iId,sGroupName))
-            self._executeQueryWithResponse(sReplaceQuery)
-        else:
-            log(WARN, "User {} doesn't exist in {}".format(sUsername, DatabaseManagerConstants.sUserInfoTableName))
-
-    def exitGroup(self, sUsername, sGroupName, iId = None):
+    def exitGroup(self, sUsername, sGroupName):
         """
             Function to exit specifed groupName.
         """
-        if iId is None:
-            iId = self.getUserId(sUsername)
-
-        if iId is not None:
-            sDeleteQuery = self._constructQuery(EQueryType.Delete, DatabaseManagerConstants.sUserGroupTableName,
-                (), (), "id={} AND groupName='{}'".format(iId, sGroupName))
-            self._executeQueryWithResponse(sDeleteQuery)
-        else:
-            log(WARN, "User {} doesn't exist in {}".format(sUsername, DatabaseManagerConstants.sUserInfoTableName))
+        sDeleteQuery = self._constructQuery(EQueryType.Delete, DatabaseManagerConstants.sUserGroupTableName,
+            (), (), "username='{}' AND groupName='{}'".format(sUsername, sGroupName))
+        self._executeQueryWithResponse(sDeleteQuery)
 
     def insertUser(self, sUsername, sTimestamp = None):
         """
@@ -252,38 +221,57 @@ class DatabaseManager:
             insert was successful or not. The insert may not be successful if the parameters
             specified are incorrect.
         """
-        iId = self.getUserId(sUsername)
-        log(DEBUG, "checking if user exists: id={} name={}".format(iId, sUsername))
-
-        if iId is None:
-            # The current username does not exist!
-            sCountQuery = self._constructQuery(EQueryType.Count, DatabaseManagerConstants.sUserInfoTableName, (), ())
-            listCountResponse = self._executeQueryWithResponse(sCountQuery)
-
-            iId = int( listCountResponse[0][0] )
-            log(DEBUG, "{} does not exist in {}, creating new entry with id={}".format(
-                sUsername, DatabaseManagerConstants.sUserInfoTableName, iId))
+        log(DEBUG, "checking if user exists: username={}".format(sUsername))
+        # Delete the user from the list first
+        sDeleteQuery = self._constructQuery(EQueryType.Delete, DatabaseManagerConstants.sUserInfoTableName,
+            None, None, "username='{}'".format(sUsername))
+        self._executeQueryWithResponse(sDeleteQuery)
 
         if sTimestamp is not None:
             sTime = sTimestamp
         else:
             sTime = Timestamp._formatTime(Timestamp.getRawTime())
         sReplaceQuery = self._constructQuery(EQueryType.Replace, DatabaseManagerConstants.sUserInfoTableName,
-            ("id", "name", "lastContactTime"), (iId, sUsername, sTime))
+            ("username", "lastContactTime"), (sUsername, sTime))
         self._executeQueryWithResponse(sReplaceQuery)
 
+    def getMessagesForUser(self, sUsername):
+        groupList = self.getGroupListForUser(sUsername)
+        dictNewMessages = Dictionary()
+
+        sLastContactTime = self.getLastContactTime(sUsername)
+
+        for sGroupName in groupList:
+            sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sConversionsTableName,
+                ("username", "groupName", "sentTime", "message"), None, "groupName='{}' AND sentTime >= '{}'".format(sGroupName, sLastContactTime))
+
+            listOutputMessagesForGroup = list()
+            listMessagesForGroup = self._executeQueryWithRawResponse(sSelectQuery)
+            for sUsername, sGroupName, timestamp, sMessage in listMessagesForGroup:
+                sTimestampInSeconds = Timestamp.getNumberOfSeconds(timestamp)
+                listOutputMessagesForGroup.append((sUsername,sGroupName,sTimestampInSeconds, sMessage))
+            dictNewMessages[sGroupName] = listOutputMessagesForGroup
+
+        return dictNewMessages
+
+    def insertMessage(self, sUsername, sGroupName, sMessage):
+        sReplaceQuery = self._constructQuery(EQueryType.Replace, DatabaseManagerConstants.sConversionsTableName,
+            ("username", "groupName", "sentTime", "message"),
+            (sUsername,sGroupName,Timestamp._formatTime(Timestamp.getRawTime()),sMessage),"")
+
+        self._executeQueryWithResponse(sReplaceQuery)
 
     ## CREATE FUNCTIONS FOR THESE BASIC COMMANDS TAKINGS VARIABLE INPUT PARAMETERS
-    # CREATE TABLE UserInfo(id INT PRIMARY KEY, name VARCHAR(256), lastContactTime DATETIME);
-    # CREATE TABLE UserGroup(id INT, groupName VARCHAR(256), FOREIGN KEY (id) REFERENCES UserInfo(id));
-    # CREATE TABLE Conversations(senderId INT, groupName VARCHAR(256), sentTime DATETIME, status INT, message VARCHAR(256), FOREIGN KEY (senderId) REFERENCES UserInfo(id));
+    # CREATE TABLE UserInfo(username VARCHAR(256), lastContactTime DATETIME);
+    # CREATE TABLE UserGroup(groupName VARCHAR(256), username VARCHAR(256));
+    # CREATE TABLE Conversations(username VARCHAR(256), groupName VARCHAR(256), sentTime DATETIME, message VARCHAR(256), ORDER BY sentTime);
 
     # DELETE FROM UserGroup WHERE id=something AND groupName=something2
 
-    # REPLACE INTO UserInfo(id, name, lastContactTime) VALUES (1, 'arup', '2016-03-02 22:50:21');
-    # REPLACE INTO UserInfo(id, name, lastContactTime) VALUES (2, 'test', '2016-03-05 12:00:21');
+    # REPLACE INTO UserInfo(username, lastContactTime) VALUES ('arup', '2016-03-02 22:50:21');
+    # REPLACE INTO UserInfo(username, lastContactTime) VALUES ('test', '2016-03-05 12:00:21');
 
-    # INSERT INTO Conversations(senderId, groupName, sentTime, status, message) VALUES (1, 'asdf', '2016-03-05 12:00:21', 0, 'i love michael');
+    # INSERT INTO Conversations(username, groupName, sentTime, message) VALUES ('derp', asdf', '2016-03-05 12:00:21', 'i love michael');
 
     # SELECT * FROM UserInfo;
     # SELECT COUNT(*) FROM UserInfo;
