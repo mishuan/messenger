@@ -10,11 +10,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +24,12 @@ public class GroupListActivity extends AppCompatActivity {
 
     private TcpClient mTcpClient;
     private ListView mListView;
-    private String[] groupsList;
-    private boolean DEBUG = true;
+    private List<String> groupsList;
+    private boolean DEBUG = false;
+    private ArrayAdapter<String> arrayAdapter;
 
-    private void showJoinLeaveGroupDialogAlert(AdapterView<?> parent, int position) {
+    private void showJoinLeaveGroupDialogAlert(AdapterView<?> parent, final int position) {
         final String selected = String.valueOf(parent.getItemAtPosition(position));
-
-        Log.e("LIST ITEM CLICKED", "ITEM SELECTED: " + selected);
 
         AlertDialog.Builder mbuilder = new AlertDialog.Builder(GroupListActivity.this);
         View mView = getLayoutInflater().inflate(R.layout.join_leave_group_alert_dialog_layout, null);
@@ -47,12 +47,15 @@ public class GroupListActivity extends AppCompatActivity {
                 //TODO: go to next activity
             }
         });
+
         mLeave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.e("LIST ITEM CLICKED", "LEAVING: " + selected);
                 dialog.hide();
-                //TODO: go to next activity
+                groupsList.remove(position);
+                arrayAdapter.notifyDataSetChanged();
+                Log.e("CHANGED LIST", groupsList.toString());
             }
         });
 
@@ -60,9 +63,9 @@ public class GroupListActivity extends AppCompatActivity {
     }
 
     private void populateList(){
-        ListAdapter listAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, groupsList);
+        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, groupsList);
         mListView = (ListView) findViewById(R.id.groups_list);
-        mListView.setAdapter(listAdapter);
+        mListView.setAdapter(arrayAdapter);
         mListView.setOnItemClickListener(
             new AdapterView.OnItemClickListener(){
                 @Override
@@ -83,22 +86,19 @@ public class GroupListActivity extends AppCompatActivity {
         mTcpClient = ConnectTask.getInstance().getTcpClient();
 
         try {
+            ConnectTask.setContext(getApplicationContext());
             Map<String, Object> data = new HashMap<>();
             data.put(Constants.USERNAME_KEY, intent.getStringExtra(Constants.USERNAME));
-            data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP);
+            data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP.getValue());
             JSONObject json = new JSONObject(data);
             Log.e("Login JSON Dictionary", json.toString());
             mTcpClient.sendMessage(json.toString());
             Thread.sleep(1337);
 
-            //TODO temporary list of groups
             if (DEBUG) {
-                groupsList = new String[]{"apple", "orange", "whatever", "idkm", "running out of things"};
+                groupsList = new ArrayList<>(Arrays.asList("apple", "orange", "whatever", "idkm", "running out of things"));
             } else {
-                // TODO: maybe fix all these sketchy operations, but whatever
-                Map<String, Object> map = ConnectTask.getInstance().getMessageForActivity(MessageType.LIST_GROUP);
-                List<String> list = (List<String>) map.get(Constants.GROUPS_KEY);
-                groupsList = (String[]) list.toArray();
+                groupsList = ConnectTask.getGroupList();
             }
 
             populateList();
@@ -108,7 +108,6 @@ public class GroupListActivity extends AppCompatActivity {
     }
 
     protected void joinOnClick(View v) {
-        Log.e(Constants.USERNAME, "floating action button got clicked!!");
         AlertDialog.Builder mbuilder = new AlertDialog.Builder(GroupListActivity.this);
         View mView = getLayoutInflater().inflate(R.layout.new_group_alert_dialog_layout, null);
         mbuilder.setView(mView);
@@ -120,8 +119,18 @@ public class GroupListActivity extends AppCompatActivity {
         mJoin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e(Constants.ACTIVITY_DEBUG_TAG, "Trying to JOIN group: " + mGroupName.getText().toString());
+                String groupName = mGroupName.getText().toString();
+                Log.e(Constants.ACTIVITY_DEBUG_TAG, "Trying to JOIN group: " + groupName);
                 dialog.hide();
+                groupsList.add(groupName);
+                arrayAdapter.notifyDataSetChanged();
+                Map<String, Object> data = new HashMap<>();
+                data.put(Constants.USERNAME_KEY, getIntent().getStringExtra(Constants.USERNAME));
+                data.put(Constants.MESSAGE_TYPE_KEY, MessageType.JOIN_GROUP.getValue());
+                data.put(Constants.GROUP_NAME_KEY, groupName);
+                JSONObject json = new JSONObject(data);
+                Log.e("JOIN_GROUP Dictionary", json.toString());
+                mTcpClient.sendMessage(json.toString());
                 //TODO: go to next activity
             }
         });

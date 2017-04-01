@@ -26,7 +26,7 @@ public class LoginActivity extends AppCompatActivity {
         i.putExtra(Constants.USERNAME, source.getText().toString());
 
         if (ConnectTask.getInstance().getIp() == null) {
-            ConnectTask.getInstance().setIpAndPort(ipAddress.getText().toString(), portNumber.getText().toString());
+            ConnectTask.setIpAndPort(ipAddress.getText().toString(), portNumber.getText().toString());
         }
 
         try {
