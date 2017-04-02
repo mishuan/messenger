@@ -6,4 +6,5 @@ package com.ece416.aruproy.messengerclient;
 
 public interface MessageObserver {
     void updateMessage();
+    void sendMessage();
 }

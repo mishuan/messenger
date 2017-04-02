@@ -5,12 +5,16 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by ilikecalculus on 2017-03-24.
@@ -22,6 +26,7 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
     private static TcpClient mTcpClient;
     private static String ipAddress = null;
     private static String portNumber = null;
+    private static String username = "";
     private static Context mContext = null;
     private static List<String> groupList = new ArrayList<>();
     private static List<String> membersList = new ArrayList<>();
@@ -39,6 +44,14 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         return instance;
     }
 
+    public static void setUsername(String u) {
+        username = u;
+    }
+
+    public static String getUsername() {
+        return username;
+    }
+
     public static void setListObserver(ListObserver o) {
         listObserver = o;
     }
@@ -51,11 +64,21 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         instance.execute("");
     }
 
-
     public static void setIpAndPort(String ip, String port){
         ipAddress = ip;
         portNumber = port;
         execute();
+    }
+
+    public static void tcpSendMessage(String message, String groupName){
+        Map<String, Object> data = new HashMap<>();
+        data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
+        data.put(Constants.MESSAGE_TYPE_KEY, MessageType.NEW_MESSAGE.getValue());
+        if (!message.equals("")) data.put(Constants.MESSAGE_KEY, message);
+        if (!groupName.equals("")) data.put(Constants.GROUP_NAME_KEY, groupName);
+        JSONObject json = new JSONObject(data);
+        Log.e("Send JSON Dictionary", json.toString());
+        ConnectTask.getInstance().getTcpClient().sendMessage(json.toString());
     }
 
     public static List<List<String>> getMessagesForGroup(String key) {
@@ -139,7 +162,6 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
                     for (String key : messageMap.keySet()) {
                         List<Object> currMsgList = (List<Object>) messageMap.get(key);
                         if (currMsgList == null) continue;
-                        Log.d("PROCESSING...", currMsgList.toString());
                         for(int i = 0; i < currMsgList.size(); i++) {
                             List<String> currMessage = (List<String>) currMsgList.get(i);
                             if (!messageQueue.containsKey(key)){
@@ -164,6 +186,30 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         } catch (Exception e) {
             Log.e("JSON_EXCEPTION", "Error converting:\n" + values[0] + "\nTo a Java Map with Exception: \n" + getStackTrace(e));
         }
+    }
+
+
+    // Lawl hacky af, but whatever
+    private static Timer timer;
+    private static TimerTask timerTask = new TimerTask() {
+
+        @Override
+        public void run() {
+            messageObserver.sendMessage();
+        }
+    };
+
+    public static void startTcpPing() {
+        if(timer != null) {
+            return;
+        }
+        timer = new Timer();
+        timer.scheduleAtFixedRate(timerTask, 0, 5000);
+    }
+
+    public static void stopTcpPing() {
+        timer.cancel();
+        timer = null;
     }
 
     private static String getStackTrace(final Throwable throwable) {

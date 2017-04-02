@@ -25,7 +25,6 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     private TcpClient mTcpClient;
     private ListView mListView;
     private List<String> groupsList;
-    private String username;
     private boolean DEBUG = false;
     private ArrayAdapter<String> arrayAdapter;
 
@@ -88,23 +87,17 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     }
 
 
-    private void setUsername() {
-        username = getIntent().getStringExtra(Constants.USERNAME_KEY);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ConnectTask.setListObserver(this);
-        setUsername();
 
-        Log.e(Constants.USERNAME_KEY, username);
         setContentView(R.layout.activity_group_page);
         mTcpClient = ConnectTask.getInstance().getTcpClient();
 
         // construct LOGIN json to send to server
         Map<String, Object> data = new HashMap<>();
-        data.put(Constants.USERNAME_KEY, username);
+        data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
         data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP.getValue());
         JSONObject json = new JSONObject(data);
         Log.e("Login JSON Dictionary", json.toString());
@@ -116,14 +109,14 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     }
     protected void joinGroupStartActivity(String groupName) {
         Intent i = new Intent(GroupListActivity.this, ChatActivity.class);
-        i.putExtra(Constants.USERNAME_KEY, username);
+        i.putExtra(Constants.USERNAME_KEY, ConnectTask.getUsername());
         i.putExtra(Constants.GROUP_NAME_KEY, groupName);
         GroupListActivity.this.startActivity(i);
     }
 
     protected void tcpGroupAction(MessageType mt, String groupName) {
         Map<String, Object> data = new HashMap<>();
-        data.put(Constants.USERNAME_KEY, username);
+        data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
         data.put(Constants.MESSAGE_TYPE_KEY, mt.getValue());
         data.put(Constants.GROUP_NAME_KEY, groupName);
         JSONObject json = new JSONObject(data);
@@ -164,11 +157,9 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     @Override
     public void onResume() {
         super.onResume();
-        setUsername();
         ConnectTask.setContext(getApplicationContext());
         ConnectTask.setMessageObserver(this);
-
-        // TODO: check for unread messages
+        ConnectTask.startTcpPing();
     }
 
     @Override
@@ -183,6 +174,13 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
 
     @Override
     public void updateMessage() {
+        // TODO do something about new messages
+        Log.d("WOWOWOW", "omg is this actually working???");
 
+    }
+
+    @Override
+    public void sendMessage() {
+        ConnectTask.tcpSendMessage("","");
     }
 }

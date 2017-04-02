@@ -3,6 +3,7 @@ package com.ece416.aruproy.messengerclient;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
@@ -18,7 +19,6 @@ import java.util.Map;
 public class ChatActivity extends AppCompatActivity implements MessageObserver {
 
     private String groupName;
-    private String username;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,27 +38,17 @@ public class ChatActivity extends AppCompatActivity implements MessageObserver {
         Intent intent = getIntent();
         TextView tv = (TextView)findViewById(R.id.group_joined);
         groupName = intent.getStringExtra(Constants.GROUP_NAME_KEY);
-        username = intent.getStringExtra(Constants.USERNAME_KEY);
-        tcpSendMessage("");
+        ConnectTask.tcpSendMessage("", groupName);
         tv.setText("Group: " + groupName);
-    }
 
-    protected void tcpSendMessage(String message){
-        Map<String, Object> data = new HashMap<>();
-        data.put(Constants.USERNAME_KEY, username);
-        data.put(Constants.MESSAGE_TYPE_KEY, MessageType.NEW_MESSAGE.getValue());
-        if (!message.equals("")) data.put(Constants.MESSAGE_KEY, message);
-        data.put(Constants.GROUP_NAME_KEY, groupName);
-        JSONObject json = new JSONObject(data);
-        Log.e("Send JSON Dictionary", json.toString());
-        ConnectTask.getInstance().getTcpClient().sendMessage(json.toString());
+        TextView tvMessageLog= (TextView) findViewById(R.id.message_log);
+        tvMessageLog.setMovementMethod(new ScrollingMovementMethod());
     }
-
 
     protected void sendOnClick(View v) {
         AutoCompleteTextView messageTextView = (AutoCompleteTextView) findViewById(R.id.message);
         String message = messageTextView.getText().toString();
-        tcpSendMessage(message);
+        ConnectTask.tcpSendMessage(message, groupName);
         messageTextView.setText("");
     }
 
@@ -77,13 +67,21 @@ public class ChatActivity extends AppCompatActivity implements MessageObserver {
         TextView tv = (TextView)findViewById(R.id.group_members);
         tv.setText("Members: " + ConnectTask.getMembersList().toString());
         List<List<String>> messages = ConnectTask.getMessagesForGroup(groupName);
+
         if (messages == null) return;
         TextView tvMessageLog= (TextView) findViewById(R.id.message_log);
         String messageLog = tvMessageLog.getText().toString();
         for (List<String> m : messages) {
-            messageLog += m.get(0) + ": " + m.get(3) + "\n";
+            messageLog += m.get(0) + ":  " + m.get(3) + "\n";
         }
+
         Log.e("CURRENT CHAT", messageLog);
         tvMessageLog.setText(messageLog);
+    }
+
+
+    @Override
+    public void sendMessage() {
+        ConnectTask.tcpSendMessage("",groupName);
     }
 }

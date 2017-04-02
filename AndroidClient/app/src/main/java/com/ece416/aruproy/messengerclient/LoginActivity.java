@@ -23,14 +23,14 @@ public class LoginActivity extends AppCompatActivity {
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.username);
         AutoCompleteTextView ipAddress = (AutoCompleteTextView) findViewById(R.id.ip_address);
         AutoCompleteTextView portNumber = (AutoCompleteTextView) findViewById(R.id.port_number);
-        i.putExtra(Constants.USERNAME_KEY, source.getText().toString());
 
         if (ConnectTask.getInstance().getIp() == null) {
+            ConnectTask.setUsername(source.getText().toString());
             ConnectTask.setIpAndPort(ipAddress.getText().toString(), portNumber.getText().toString());
         }
 
         try {
-            Thread.sleep(500);
+            Thread.sleep(1000);
         } catch (Exception e) {
             Log.e("LOGIN ACTIVITY THREAD", "Thread didn't actually sleep???");
         }

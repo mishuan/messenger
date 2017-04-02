@@ -11,8 +11,8 @@
     tools:context="com.ece416.aruproy.messengerclient.ChatActivity">
 
     <TextView
-        android:maxLines = "1000"
-        android:scrollbars = "vertical"
+        android:maxLines="27"
+        android:scrollbars="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
@@ -59,6 +59,8 @@
     <TextView
         android:id="@+id/group_members"
         android:text="Members"
+        android:paddingLeft="20sp"
+        android:paddingRight="20sp"
         android:textColor="@color/colorPrimary"
         android:textSize="15sp"
         android:layout_width="wrap_content"
@@ -67,6 +69,6 @@
         android:layout_below="@+id/group_joined"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:paddingBottom="20sp"/>
+        android:paddingBottom="10sp"/>
 
 </RelativeLayout>

@@ -13,4 +13,5 @@ public class Constants {
     public static String GROUPS_KEY = "groupList";
     public static String GROUP_NAME_KEY = "groupName";
     public static String TCP_DEBUG = "TCP_DEBUG";
+    public static String SERVICE_DEBUG_TAG = "TCP_SERVICE";
 }
