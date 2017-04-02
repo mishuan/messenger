@@ -99,9 +99,9 @@ class ThreadedServer:
                 message - Dictionary-formatted object storing the message
         """
         try:
-            log(DEBUG, ">>")
+            log(DEBUG, ">> {}".format(message))
             serializedData = json.dumps(message)
-            connection.send(serializedData)
+            connection.sendall(serializedData + '\r\n')
             log(DEBUG, "<<")
         except Exception as e:
             log(ERROR, "Unable to send message, reason: {}".format(e))
@@ -118,8 +118,8 @@ class ThreadedServer:
         while True:
             try:
                 serializedData = connection.recv(NetConstants.iServerReceiveBufferSize)
-                log(DEBUG, '>>1 {}'.format(serializedData))
                 if serializedData:
+                    log(DEBUG, '>>1 {}'.format(serializedData))
                     message = json.loads(serializedData) # decode msg                     
                     log(DEBUG, '>>2 {}'.format(message))
                     self.callbackFunction(sSourceIpAddress, connection, message)

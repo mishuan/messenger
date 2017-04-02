@@ -178,6 +178,8 @@ class DatabaseManager:
             ("groupName",),None,"username='{}'".format(sUsername))
         response = self._executeQueryWithResponse(sSelectQuery)
 
+        log(INFO, "{}".format(response))
+
         return response
 
     def getGroupList(self):
@@ -191,9 +193,10 @@ class DatabaseManager:
             ("lastContactTime",), None, "username='{}'".format(sUsername) )
         response = self._executeQueryWithResponse(sSelectQuery)
 
-        # log(INFO, "{} - {} - {}".format(response, response[0], Timestamp._formatTime(response[0])))
+        log(INFO, "{} - {}".format(response, response[0]))
 
-        return Timestamp._formatTime(response[0])
+        return response[0]
+        # return Timestamp._formatTime(response[0])
 
     def joinGroup(self, sUsername, sGroupName):
         """
@@ -245,11 +248,14 @@ class DatabaseManager:
             sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sConversionsTableName,
                 ("username", "groupName", "sentTime", "message"), None, "groupName='{}' AND sentTime >= '{}'".format(sGroupName, sLastContactTime))
 
+            # sSelectQuery += " ORDER BY convert(sentTime, decimal)"
+            sSelectQuery += " ORDER BY sentTime"
+
             listOutputMessagesForGroup = list()
             listMessagesForGroup = self._executeQueryWithRawResponse(sSelectQuery)
-            for sUsername, sGroupName, timestamp, sMessage in listMessagesForGroup:
-                sTimestampInSeconds = Timestamp.getNumberOfSeconds(timestamp)
-                listOutputMessagesForGroup.append((sUsername,sGroupName,sTimestampInSeconds, sMessage))
+            for sUsername, sGroupName, sTimestamp, sMessage in listMessagesForGroup:
+                # sTimestampInSeconds = Timestamp.getNumberOfSecondsFromString(sTimestamp)
+                listOutputMessagesForGroup.append((sUsername,sGroupName,sTimestamp,sMessage))
             dictNewMessages[sGroupName] = listOutputMessagesForGroup
 
         return dictNewMessages
@@ -262,16 +268,17 @@ class DatabaseManager:
         self._executeQueryWithResponse(sReplaceQuery)
 
     ## CREATE FUNCTIONS FOR THESE BASIC COMMANDS TAKINGS VARIABLE INPUT PARAMETERS
-    # CREATE TABLE UserInfo(username VARCHAR(256), lastContactTime DATETIME);
+    # CREATE TABLE UserInfo(username VARCHAR(256), lastContactTime VARCHAR(256));
     # CREATE TABLE UserGroup(groupName VARCHAR(256), username VARCHAR(256));
-    # CREATE TABLE Conversations(username VARCHAR(256), groupName VARCHAR(256), sentTime DATETIME, message VARCHAR(256), ORDER BY sentTime);
+    # CREATE TABLE Conversations(username VARCHAR(256), groupName VARCHAR(256), sentTime VARCHAR(256), message VARCHAR(256));
 
     # DELETE FROM UserGroup WHERE id=something AND groupName=something2
 
     # REPLACE INTO UserInfo(username, lastContactTime) VALUES ('arup', '2016-03-02 22:50:21');
     # REPLACE INTO UserInfo(username, lastContactTime) VALUES ('test', '2016-03-05 12:00:21');
 
-    # INSERT INTO Conversations(username, groupName, sentTime, message) VALUES ('derp', asdf', '2016-03-05 12:00:21', 'i love michael');
+    # INSERT INTO Conversations(username, groupName, sentTime, message) VALUES ('derp', asdf', '2016-03-05 12:00:21.000000', 'i love michael');
 
+    # SELECT * From Conversations ORDER BY convert(sentTime, decimal);
     # SELECT * FROM UserInfo;
     # SELECT COUNT(*) FROM UserInfo;
