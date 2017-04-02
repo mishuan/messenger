@@ -136,10 +136,6 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         mContext = context;
     }
 
-    public String getIp(){
-        return ipAddress;
-    }
-
     public TcpClient getTcpClient() {
         return mTcpClient;
     }
@@ -172,7 +168,6 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         if (groups.size() > 0)
             Toast.makeText(mContext, "New message from groups: " + groups.toString(), Toast.LENGTH_SHORT).show();
     }
-
 
     @Override
     protected void onProgressUpdate(String... values) {

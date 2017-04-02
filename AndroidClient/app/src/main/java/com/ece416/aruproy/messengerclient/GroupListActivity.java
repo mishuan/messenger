@@ -138,7 +138,20 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
         ConnectTask.setCurrGroup("");
         ConnectTask.setMessageObserver(this);
         ConnectTask.startTcpPing();
+        update();
         if (arrayAdapter != null) arrayAdapter.notifyDataSetChanged();
+    }
+
+    private void update()
+    {
+        TextView tv = (TextView)findViewById(R.id.status);
+        if (ConnectTask.isServerOnline()) {
+            tv.setTextColor(Color.parseColor("#3F51B5"));
+            tv.setText("Server Status: ONLINE");
+        } else {
+            tv.setTextColor(Color.parseColor("#FF4081"));
+            tv.setText("Server Status: OFFLINE");
+        }
     }
 
     @Override
@@ -168,14 +181,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
         {
             public void run()
             {
-                TextView tv = (TextView)findViewById(R.id.status);
-                if (ConnectTask.isServerOnline()) {
-                    tv.setTextColor(Color.parseColor("#3F51B5"));
-                    tv.setText("Server Status: ONLINE");
-                } else {
-                    tv.setTextColor(Color.parseColor("#FF4081"));
-                    tv.setText("Server Status: OFFLINE");
-                }
+                update();
             }
         });
     }

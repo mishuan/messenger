@@ -27,6 +27,7 @@ public class ChatActivity extends AppCompatActivity implements MessageObserver {
         super.onResume();
         ConnectTask.setContext(getApplicationContext());
         ConnectTask.setMessageObserver(this);
+        update();
         setupChat();
     }
 
@@ -93,6 +94,17 @@ public class ChatActivity extends AppCompatActivity implements MessageObserver {
         tvMessageLog.setText(messageLog);
     }
 
+    private void update()
+    {
+        TextView tv = (TextView)findViewById(R.id.status);
+        if (ConnectTask.isServerOnline()) {
+            tv.setTextColor(Color.parseColor("#3F51B5"));
+            tv.setText("Server Status: ONLINE");
+        } else {
+            tv.setTextColor(Color.parseColor("#FF4081"));
+            tv.setText("Server Status: OFFLINE");
+        }
+    }
 
     @Override
     public void sendMessage() {
@@ -105,14 +117,7 @@ public class ChatActivity extends AppCompatActivity implements MessageObserver {
         {
             public void run()
             {
-                TextView tv = (TextView)findViewById(R.id.status);
-                if (ConnectTask.isServerOnline()) {
-                    tv.setTextColor(Color.parseColor("#3F51B5"));
-                    tv.setText("Server Status: ONLINE");
-                } else {
-                    tv.setTextColor(Color.parseColor("#FF4081"));
-                    tv.setText("Server Status: OFFLINE");
-                }
+                update();
             }
         });
     }
