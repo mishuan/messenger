@@ -165,6 +165,19 @@ class DatabaseManager:
             sQuery = ""
         return sQuery
 
+    def isUserInDatabase(self, sUsername):
+        sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserInfoTableName,
+            ("username",),None,"username='{}'".format(sUsername))
+        response = self._executeQueryWithResponse(sSelectQuery)
+
+        bResult = False
+        if response:
+            bResult = True
+        log(ERROR, "response = {} {}".format(response, bResult))
+
+        return bResult
+
+
     def getUsersInGroup(self, sGroupName):
         sSelectQuery = self._constructQuery(EQueryType.Select, DatabaseManagerConstants.sUserGroupTableName,
             ("username",),None,"groupName='{}'".format(sGroupName))
@@ -178,7 +191,7 @@ class DatabaseManager:
             ("groupName",),None,"username='{}'".format(sUsername))
         response = self._executeQueryWithResponse(sSelectQuery)
 
-        log(INFO, "{}".format(response))
+        log(INFO, "{} {}".format(response, isinstance(response, list)))
 
         return response
 
