@@ -43,6 +43,7 @@ class MessageKey:
     Timestamp = "timestamp"
     GroupName = "groupName"
     GroupList = "groupList"
+    Members = "members"
 
 """ Modified Data Structures """
 class Dictionary(dict):
@@ -79,4 +80,4 @@ class NetConstants:
     iServerBasePort = 6000
     iServerReceiveBufferSize = 4096
     iServerBacklogConnections = 4
-    iServerTimeout = 30
+    iServerTimeout = None # no timeout
