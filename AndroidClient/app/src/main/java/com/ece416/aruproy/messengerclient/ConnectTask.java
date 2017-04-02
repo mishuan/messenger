@@ -13,8 +13,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Created by ilikecalculus on 2017-03-24.
@@ -27,10 +29,13 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
     private static String ipAddress = null;
     private static String portNumber = null;
     private static String username = "";
+    private static String currGroup = "";
     private static Context mContext = null;
+    private static boolean isServerOnline = false;
     private static List<String> groupList = new ArrayList<>();
     private static List<String> membersList = new ArrayList<>();
     private static Map<String, List<List<String>>> messageQueue = new HashMap<>();
+    private static Queue<Map<String, String>> messageBuffer = new ConcurrentLinkedQueue<>();
 
     private static ListObserver listObserver;
     private static MessageObserver messageObserver;
@@ -48,6 +53,10 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         username = u;
     }
 
+    public static void setCurrGroup(String gn) {
+        currGroup = gn;
+    }
+
     public static String getUsername() {
         return username;
     }
@@ -60,26 +69,47 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         messageObserver = o;
     }
 
-    public static void execute() {
-        instance.execute("");
-    }
-
     public static void setIpAndPort(String ip, String port){
         ipAddress = ip;
         portNumber = port;
-        execute();
     }
 
+    public static boolean isServerOnline() {
+        return isServerOnline;
+    }
+
+
     public static void tcpSendMessage(String message, String groupName){
-        Map<String, Object> data = new HashMap<>();
+        Map<String, String> data = new HashMap<>();
         data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
         data.put(Constants.MESSAGE_TYPE_KEY, MessageType.NEW_MESSAGE.getValue());
         if (!message.equals("")) data.put(Constants.MESSAGE_KEY, message);
         if (!groupName.equals("")) data.put(Constants.GROUP_NAME_KEY, groupName);
+        bufferSendMessage(data);
+    }
+
+    public static void tcpGroupAction(MessageType mt, String groupName) {
+        Map<String, String> data = new HashMap<>();
+        data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
+        data.put(Constants.MESSAGE_TYPE_KEY, mt.getValue());
+        data.put(Constants.GROUP_NAME_KEY, groupName);
+        bufferSendMessage(data);
+    }
+
+    public static void tcpLogin() {
+        Map<String, String> data = new HashMap<>();
+        data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
+        data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP.getValue());
+        bufferSendMessage(data);
+    }
+
+    public static void bufferSendMessage(Map<String, String> data) {
         JSONObject json = new JSONObject(data);
         Log.e("Send JSON Dictionary", json.toString());
+        messageBuffer.add(data);
         ConnectTask.getInstance().getTcpClient().sendMessage(json.toString());
     }
+
 
     public static List<List<String>> getMessagesForGroup(String key) {
         if (messageQueue.containsKey(key)) {
@@ -138,13 +168,27 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         }
     }
 
+    private void toastNotif(List<String> groups) {
+        if (groups.size() > 0)
+            Toast.makeText(mContext, "New message from groups: " + groups.toString(), Toast.LENGTH_SHORT).show();
+    }
+
+
     @Override
     protected void onProgressUpdate(String... values) {
         super.onProgressUpdate(values);
         //response received from server
         Log.e("CONNECT_TASK", "response " + values[0]);
+        isServerOnline = true;
         try {
             Map<String, Object> map = JSONUtil.jsonToMap(values[0]);
+            if (!map.get(Constants.MESSAGE_TYPE_KEY).equals(messageBuffer.peek().get(Constants.MESSAGE_TYPE_KEY)))
+                return;
+            messageBuffer.poll();
+
+            // update status
+            messageObserver.updateStatus();
+
             switch(MessageType.get(map.get(Constants.MESSAGE_TYPE_KEY).toString())) {
                 case JOIN_GROUP:
                     toastGroupOperation(map, MessageType.JOIN_GROUP);
@@ -158,29 +202,33 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
                     groupList = map.get(Constants.GROUPS_KEY) != null
                             ? (List<String>) map.get(Constants.GROUPS_KEY)
                             : groupList;
+                    // populate lists
                     listObserver.updateList();
                     break;
 
                 case NEW_MESSAGE:
                     Map<String, Object> messageMap = (Map<String, Object>) map.get(Constants.MESSAGE_KEY);
-                    for (String key : messageMap.keySet()) {
-                        List<Object> currMsgList = (List<Object>) messageMap.get(key);
-                        if (currMsgList == null) continue;
+                    List<String> newMesageGroup = new ArrayList<>();
+                    for (String group : messageMap.keySet()) {
+                        List<Object> currMsgList = (List<Object>) messageMap.get(group);
+                        if (currMsgList == null || currMsgList.size() == 0) continue;
+                        if (!group.equals(currGroup)) newMesageGroup.add(group);
                         for(int i = 0; i < currMsgList.size(); i++) {
                             List<String> currMessage = (List<String>) currMsgList.get(i);
-                            if (!messageQueue.containsKey(key)){
-                                messageQueue.put(key, new ArrayList<List<String>>());
+                            if (!messageQueue.containsKey(group)){
+                                messageQueue.put(group, new ArrayList<List<String>>());
                             }
-                            messageQueue.get(key).add(currMessage);
+                            messageQueue.get(group).add(currMessage);
                         }
                     }
 
                     membersList = (List<String>) map.get(Constants.MEMBERS_KEY);
+                    messageObserver.updateMessage();
+                    toastNotif(newMesageGroup);
 
                     Log.d("CURRENT MEMBER LIST", membersList.toString());
                     Log.d("CURRENT QUEUE", messageQueue.toString());
 
-                    messageObserver.updateMessage();
                     break;
 
                 default:
@@ -192,14 +240,44 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         }
     }
 
+    private static void resolveBuffer() {
+        int max = 0;
+        while (max < 10) {
+            if (messageBuffer.peek() == null) return;
+            JSONObject json = new JSONObject(messageBuffer.peek());
+            Log.e("Resending...", json.toString());
+            ConnectTask.getInstance().getTcpClient().sendMessage(json.toString());
+            try {
+                Thread.sleep(300);
+            } catch (Exception e) {
+                Log.e("CONNECT_TASK_EXCEPTION", e.toString());
+            }
+            max += 1;
+        }
+    }
+
+    public static void restartTcpClient() {
+        if (instance != null) {
+            instance.getTcpClient().stopClient();
+        }
+        instance = new ConnectTask();
+        instance.execute("");
+    }
 
     // Lawl hacky af, but whatever
     private static Timer timer;
     private static TimerTask timerTask = new TimerTask() {
-
         @Override
         public void run() {
-            messageObserver.sendMessage();
+            if (messageBuffer.size() < 1) {
+                messageObserver.sendMessage();
+            }
+            else {
+                isServerOnline = false;
+                messageObserver.updateStatus();
+                restartTcpClient();
+                resolveBuffer();
+            }
         }
     };
 

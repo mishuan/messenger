@@ -12,7 +12,7 @@ import java.net.Socket;
 
 /**
  * Created by ilikecalculus on 2017-03-04.
- * Retrieved from stackoverflow:
+ * Courtesy of stackoverflow:
  * http://stackoverflow.com/questions/38162775/really-simple-tcp-client
  */
 public class TcpClient {

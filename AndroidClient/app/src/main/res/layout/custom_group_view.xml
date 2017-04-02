@@ -6,9 +6,9 @@
     <TextView
         android:text="TextView"
         android:textSize="20sp"
-        android:paddingBottom="20sp"
+        android:paddingBottom="17sp"
         android:paddingLeft="20sp"
-        android:paddingTop="20sp"
+        android:paddingTop="17sp"
         android:paddingRight="20sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

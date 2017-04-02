@@ -22,13 +22,11 @@ public class LoginActivity extends AppCompatActivity {
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.username);
         AutoCompleteTextView ipAddress = (AutoCompleteTextView) findViewById(R.id.ip_address);
         AutoCompleteTextView portNumber = (AutoCompleteTextView) findViewById(R.id.port_number);
-        ConnectTask.setUsername(source.getText().toString());
         Log.e("LOGIN ACTIVITY THREAD", source.getText().toString());
 
-        if (ConnectTask.getInstance().getIp() == null) {
-            ConnectTask.setUsername(source.getText().toString());
-            ConnectTask.setIpAndPort(ipAddress.getText().toString(), portNumber.getText().toString());
-        }
+        ConnectTask.setUsername(source.getText().toString());
+        ConnectTask.setIpAndPort(ipAddress.getText().toString(), portNumber.getText().toString());
+        ConnectTask.restartTcpClient();
 
         try {
             Thread.sleep(1000);

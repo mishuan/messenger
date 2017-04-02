@@ -1,6 +1,7 @@
 package com.ece416.aruproy.messengerclient;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -11,18 +12,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-
-import org.json.JSONObject;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class GroupListActivity extends AppCompatActivity implements ListObserver, MessageObserver{
 
-    private TcpClient mTcpClient;
     private ListView mListView;
     private List<String> groupsList;
     private boolean DEBUG = false;
@@ -59,7 +56,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
                 arrayAdapter.notifyDataSetChanged();
 
                 // construct LEAVE_GROUP json to send to server
-                tcpGroupAction(MessageType.LEAVE_GROUP, selected);
+                ConnectTask.tcpGroupAction(MessageType.LEAVE_GROUP, selected);
             }
         });
 
@@ -91,17 +88,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ConnectTask.setListObserver(this);
-
         setContentView(R.layout.activity_group_page);
-        mTcpClient = ConnectTask.getInstance().getTcpClient();
-
-        // construct LOGIN json to send to server
-        Map<String, Object> data = new HashMap<>();
-        data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
-        data.put(Constants.MESSAGE_TYPE_KEY, MessageType.LIST_GROUP.getValue());
-        JSONObject json = new JSONObject(data);
-        Log.e("Login JSON Dictionary", json.toString());
-        mTcpClient.sendMessage(json.toString());
 
         if (DEBUG) {
             groupsList = new ArrayList<>(Arrays.asList("apple", "orange", "whatever", "idkm", "running out of things"));
@@ -113,17 +100,6 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
         i.putExtra(Constants.GROUP_NAME_KEY, groupName);
         GroupListActivity.this.startActivity(i);
     }
-
-    protected void tcpGroupAction(MessageType mt, String groupName) {
-        Map<String, Object> data = new HashMap<>();
-        data.put(Constants.USERNAME_KEY, ConnectTask.getUsername());
-        data.put(Constants.MESSAGE_TYPE_KEY, mt.getValue());
-        data.put(Constants.GROUP_NAME_KEY, groupName);
-        JSONObject json = new JSONObject(data);
-        Log.e(mt.getValue() + " Dictionary", json.toString());
-        mTcpClient.sendMessage(json.toString());
-    }
-
 
     protected void joinOnClick(View v) {
         AlertDialog.Builder mbuilder = new AlertDialog.Builder(GroupListActivity.this);
@@ -144,7 +120,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
                 arrayAdapter.notifyDataSetChanged();
 
                 // construct JOIN_GROUP json to send to server
-                tcpGroupAction(MessageType.JOIN_GROUP, groupName);
+                ConnectTask.tcpGroupAction(MessageType.JOIN_GROUP, groupName);
 
                 // start message chat activity
                 joinGroupStartActivity(groupName);
@@ -157,7 +133,9 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     @Override
     public void onResume() {
         super.onResume();
+        ConnectTask.tcpLogin();
         ConnectTask.setContext(getApplicationContext());
+        ConnectTask.setCurrGroup("");
         ConnectTask.setMessageObserver(this);
         ConnectTask.startTcpPing();
         if (arrayAdapter != null) arrayAdapter.notifyDataSetChanged();
@@ -182,5 +160,23 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     @Override
     public void sendMessage() {
         ConnectTask.tcpSendMessage("","");
+    }
+
+    @Override
+    public void updateStatus() {
+        this.runOnUiThread(new Runnable()
+        {
+            public void run()
+            {
+                TextView tv = (TextView)findViewById(R.id.status);
+                if (ConnectTask.isServerOnline()) {
+                    tv.setTextColor(Color.parseColor("#3F51B5"));
+                    tv.setText("Server Status: ONLINE");
+                } else {
+                    tv.setTextColor(Color.parseColor("#FF4081"));
+                    tv.setText("Server Status: OFFLINE");
+                }
+            }
+        });
     }
 }
