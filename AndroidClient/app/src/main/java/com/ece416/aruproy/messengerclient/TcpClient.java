@@ -12,12 +12,12 @@ import java.net.Socket;
 
 /**
  * Created by ilikecalculus on 2017-03-04.
- * Retrieved from stackoverflow:
+ * Courtesy of stackoverflow:
  * http://stackoverflow.com/questions/38162775/really-simple-tcp-client
  */
 public class TcpClient {
 
-    public static String SERVER_IP = "10.0.2.22"; //server IP address
+    public static String SERVER_IP = "192.168.2.152"; //server IP address
     public static int SERVER_PORT = 6000;
     // message to send to the server
     private String mServerMessage;
@@ -91,12 +91,9 @@ public class TcpClient {
                 //receives the message which the server sends back
                 mBufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-
                 //in this while the client listens for the messages sent by the server
                 while (mRun) {
-
                     mServerMessage = mBufferIn.readLine();
-
                     if (mServerMessage != null && mMessageListener != null) {
                         //call the method messageReceived from MyActivity class
                         mMessageListener.messageReceived(mServerMessage);

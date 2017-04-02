@@ -14,4 +14,9 @@
     <string name="prompt_ip_address">Server IP Address</string>
     <string name="prompt_port_number">Server Port Number</string>
     <string name="action_sign_in">Sign in or register</string>
+
+    <!-- Strings related to messaging-->
+    <string name="prompt_message">Message...</string>
+    <string name="action_send_message">Send</string>
+
 </resources>
