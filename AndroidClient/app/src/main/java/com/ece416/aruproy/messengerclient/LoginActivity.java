@@ -19,10 +19,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     protected void loginOnClick(View v) {
-        Intent i = new Intent(LoginActivity.this, GroupListActivity.class);
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.username);
         AutoCompleteTextView ipAddress = (AutoCompleteTextView) findViewById(R.id.ip_address);
         AutoCompleteTextView portNumber = (AutoCompleteTextView) findViewById(R.id.port_number);
+        ConnectTask.setUsername(source.getText().toString());
+        Log.e("LOGIN ACTIVITY THREAD", source.getText().toString());
 
         if (ConnectTask.getInstance().getIp() == null) {
             ConnectTask.setUsername(source.getText().toString());
@@ -35,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
             Log.e("LOGIN ACTIVITY THREAD", "Thread didn't actually sleep???");
         }
 
+        Intent i = new Intent(LoginActivity.this, GroupListActivity.class);
         LoginActivity.this.startActivity(i);
     }
 }

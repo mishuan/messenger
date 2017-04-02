@@ -67,7 +67,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     }
 
     private void populateList(){
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, groupsList);
+        arrayAdapter = new GroupArrayAdapter(this, groupsList);
         mListView = (ListView) findViewById(R.id.groups_list);
         mListView.setAdapter(arrayAdapter);
         mListView.setOnItemClickListener(
@@ -131,7 +131,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
         mbuilder.setView(mView);
         final AlertDialog dialog = mbuilder.create();
 
-        final EditText mGroupName = (EditText) mView.findViewById(R.id.group_name);
+        final EditText mGroupName = (EditText) mView.findViewById(R.id.join_group_name);
         Button mJoin = (Button) mView.findViewById(R.id.join_new_group);
 
         mJoin.setOnClickListener(new View.OnClickListener() {
@@ -160,6 +160,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
         ConnectTask.setContext(getApplicationContext());
         ConnectTask.setMessageObserver(this);
         ConnectTask.startTcpPing();
+        if (arrayAdapter != null) arrayAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -175,8 +176,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     @Override
     public void updateMessage() {
         // TODO do something about new messages
-        Log.d("WOWOWOW", "omg is this actually working???");
-
+        arrayAdapter.notifyDataSetChanged();
     }
 
     @Override

@@ -90,6 +90,10 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         return null;
     }
 
+    public static boolean hasNewMessagesForGroup(String group) {
+        return messageQueue.containsKey(group);
+    }
+
     public static List<String> getGroupList() {
         return groupList;
     }

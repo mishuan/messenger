@@ -1,7 +1,9 @@
 package com.ece416.aruproy.messengerclient;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -15,17 +17,23 @@ import java.util.List;
 
 public class GroupArrayAdapter extends ArrayAdapter<String> {
 
-    public GroupArrayAdapter(Context context, int layoutResourceId, List<String> data) {
-        super(context, layoutResourceId, data);
+    public GroupArrayAdapter(Context context, List<String> data) {
+        super(context, R.layout.custom_group_view, data);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View returnedView = super.getView(position, convertView, parent);
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        View customView = inflater.inflate(R.layout.custom_group_view, parent, false);
 
-        TextView text = (TextView) returnedView.findViewById(R.id.text);
-        text.setTypeface(null, Typeface.BOLD);
+        String group = getItem(position);
+        TextView tvGroupName = (TextView) customView.findViewById(R.id.group_name_text);
+        if (ConnectTask.hasNewMessagesForGroup(group)) {
+            tvGroupName.setTypeface(null, Typeface.BOLD);
+            tvGroupName.setTextColor(Color.parseColor("#FF4081"));
+        }
+        tvGroupName.setText(group);
 
-        return returnedView;
+        return customView;
     }
 }
