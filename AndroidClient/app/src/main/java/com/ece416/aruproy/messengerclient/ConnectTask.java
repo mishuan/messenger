@@ -32,7 +32,7 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
     private static String currGroup = "";
     private static Context mContext = null;
     private static boolean isServerOnline = false;
-    private static List<String> groupList = new ArrayList<>();
+    private static List<String> groupList = new ArrayList<>(1);
     private static List<String> membersList = new ArrayList<>();
     private static Map<String, List<List<String>>> messageQueue = new HashMap<>();
     private static Queue<Map<String, String>> messageBuffer = new ConcurrentLinkedQueue<>();
@@ -259,7 +259,6 @@ public class ConnectTask extends AsyncTask<String, String, TcpClient> {
         instance.execute("");
     }
 
-    // Lawl hacky af, but whatever
     private static Timer timer;
     private static TimerTask timerTask = new TimerTask() {
         @Override

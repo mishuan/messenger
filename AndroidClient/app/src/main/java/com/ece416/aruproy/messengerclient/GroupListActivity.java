@@ -14,14 +14,9 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class GroupListActivity extends AppCompatActivity implements ListObserver, MessageObserver{
 
     private ListView mListView;
-    private List<String> groupsList;
     private boolean DEBUG = false;
     private ArrayAdapter<String> arrayAdapter;
 
@@ -52,7 +47,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
             public void onClick(View v) {
                 Log.e("LIST ITEM CLICKED", "LEAVING: " + selected);
                 dialog.hide();
-                groupsList.remove(position);
+                ConnectTask.getGroupList().remove(position);
                 arrayAdapter.notifyDataSetChanged();
 
                 // construct LEAVE_GROUP json to send to server
@@ -64,7 +59,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
     }
 
     private void populateList(){
-        arrayAdapter = new GroupArrayAdapter(this, groupsList);
+        arrayAdapter = new GroupArrayAdapter(this, ConnectTask.getGroupList());
         mListView = (ListView) findViewById(R.id.groups_list);
         mListView.setAdapter(arrayAdapter);
         mListView.setOnItemClickListener(
@@ -78,8 +73,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
 
     @Override
     public void updateList() {
-        groupsList = ConnectTask.getGroupList();
-        Log.e("GroupListActivity", groupsList.toString());
+        Log.e("GroupListActivity", ConnectTask.getGroupList().toString());
         populateList();
     }
 
@@ -89,10 +83,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
         super.onCreate(savedInstanceState);
         ConnectTask.setListObserver(this);
         setContentView(R.layout.activity_group_page);
-
-        if (DEBUG) {
-            groupsList = new ArrayList<>(Arrays.asList("apple", "orange", "whatever", "idkm", "running out of things"));
-        }
+        populateList();
     }
     protected void joinGroupStartActivity(String groupName) {
         Intent i = new Intent(GroupListActivity.this, ChatActivity.class);
@@ -116,7 +107,7 @@ public class GroupListActivity extends AppCompatActivity implements ListObserver
                 String groupName = mGroupName.getText().toString();
                 Log.e(Constants.ACTIVITY_DEBUG_TAG, "Trying to JOIN group: " + groupName);
                 dialog.hide();
-                groupsList.add(groupName);
+                ConnectTask.getGroupList().add(groupName);
                 arrayAdapter.notifyDataSetChanged();
 
                 // construct JOIN_GROUP json to send to server
