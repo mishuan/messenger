@@ -3,6 +3,7 @@ import json
 import threading
 from logger import *
 from constants import NetConstants, Dictionary, EThreadType
+import sys
 
 class ThreadedServer:
     """
@@ -128,7 +129,12 @@ class ThreadedServer:
                     raise Exception('Client disconnected')
             except Exception as e:
                 connection.close()
-                log(DEBUG, 'Done Receiving Message: {}'.format(e))
+
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                # print(exc_type, fname, exc_tb.tb_lineno)
+
+                log(DEBUG, 'Done Receiving Message: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno))
                 log(DEBUG, '<<')
                 return
 

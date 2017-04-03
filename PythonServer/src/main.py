@@ -42,12 +42,9 @@ def receivedMessage(sSourceIpAddress, connection, message):
                 if messageType == EMessageType.ListGroups:
                     log(INFO, "Contacted by user {}".format(sUsername))
 
-                    # if sUsername is not None:
-                    #     # TODO: do not update timestamp for this case and update timestamp every
-                    #     #       time a new message msg is received from the android client
-                    #     databaseManager.insertUser(sUsername);
-                    # else:
-                    #     log(ERROR, "sUsername is None!")
+                    if not databaseManager.isUserInDatabase(sUsername):
+                        log(INFO, "Adding new user '{}' to database..".format(sUsername))
+                        databaseManager.insertUser(sUsername);
 
                     response[MessageKey.MessageType] = str(EMessageType.ListGroups)
                     response[MessageKey.GroupList] = databaseManager.getGroupListForUser(sUsername)
